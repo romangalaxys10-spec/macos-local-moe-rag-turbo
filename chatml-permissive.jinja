@@ -109,13 +109,15 @@
                     {%- else %}
                         {{- '\n<tool_call>\n<function=' + tool_call.name + '>\n' }}
                     {%- endif %}
-                    {%- if tool_call.arguments is defined %}
+                    {%- if tool_call.arguments is mapping %}
                         {%- for args_name, args_value in tool_call.arguments|items %}
                             {{- '<parameter=' + args_name + '>\n' }}
                             {%- set args_value = args_value | string if args_value is string else args_value | tojson | safe %}
                             {{- args_value }}
                             {{- '\n</parameter>\n' }}
                         {%- endfor %}
+                    {%- elif tool_call.arguments is string and tool_call.arguments|trim not in ['', '{}', 'null'] %}
+                        {{- '\n' + tool_call.arguments + '\n' }}
                     {%- endif %}
                     {{- '</function>\n</tool_call>' }}
                 {%- endfor %}
