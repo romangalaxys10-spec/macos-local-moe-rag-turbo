@@ -257,8 +257,6 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         if k.lower() not in ('content-length', 'transfer-encoding'):
                             self.send_header(k, v)
                     self.end_headers()
-                    in_think = False
-                    think_buffer = ""
                     assistant_text = ""
                     while True:
                         line = resp.readline()
@@ -266,42 +264,19 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             break
                         
                         if line.startswith(b'data: '):
-                            try:
-                                chunk = json.loads(line[6:])
-                                delta_text = ""
-                                if 'choices' in chunk and len(chunk['choices']) > 0:
-                                    delta = chunk['choices'][0].get('delta', {})
-                                    delta_text = delta.get('content', '')
-                                elif 'delta' in chunk:
-                                    delta_text = str(chunk.get('delta', ''))
-                                
-                                if delta_text:
-                                    assistant_text += delta_text
-                                    filtered_text = ""
-                                    for char in delta_text:
-                                        think_buffer += char
-                                        if not in_think:
-                                            if "<think>" in think_buffer:
-                                                in_think = True
-                                                filtered_text += think_buffer.split("<think>")[0]
-                                                think_buffer = ""
-                                            elif not "<think>".startswith(think_buffer):
-                                                filtered_text += think_buffer
-                                                think_buffer = ""
-                                        else:
-                                            if "</think>" in think_buffer:
-                                                in_think = False
-                                                parts = think_buffer.split("</think>")
-                                                think_buffer = parts[1] if len(parts) > 1 else ""
-                                    
-                                    # Write back the filtered text to the chunk
+                            data_str = line[6:].strip()
+                            if data_str != b'[DONE]':
+                                try:
+                                    chunk = json.loads(data_str)
+                                    chunk = sanitize_tool_calls(chunk)
                                     if 'choices' in chunk and len(chunk['choices']) > 0:
-                                        chunk['choices'][0]['delta']['content'] = filtered_text
-                                    elif 'delta' in chunk:
-                                        chunk['delta'] = filtered_text
+                                        delta = chunk['choices'][0].get('delta', {})
+                                        delta_text = delta.get('content', '')
+                                        if delta_text:
+                                            assistant_text += delta_text
                                     line = b'data: ' + json.dumps(chunk, separators=(',', ':')).encode('utf-8') + b'\n\n'
-                            except Exception:
-                                pass
+                                except Exception:
+                                    pass
                         
                         self.wfile.write(line)
                         self.wfile.flush()
