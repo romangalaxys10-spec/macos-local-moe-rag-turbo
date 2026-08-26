@@ -44,3 +44,22 @@ base_url = "http://127.0.0.1:10101/v1"
 When running high-end agentic workflows, injecting dozens of tools and skills into the context window blows up the prompt size. `llama-server` rigidly rejects oversized prompts to protect RAM. This custom proxy acts as an intelligent bouncer—trimming just enough history to fit the tools, appending the latest user message to bypass strict Jinja template rules, intercepting unsupported `reasoning` outputs, and expanding the model's memory via SSD-based RAG. 
 
 *Engineered natively on macOS.*
+
+## 🛡️ Deployed Fix: "Jinja Exception: No user query found in messages" (2026-08-26)
+
+`ornith-1.5-35b-uncensored` and `qwen3.8-27b-uncensored` shipped a strict Qwen-style chat template
+**embedded inside the GGUF weights** (`tokenizer.chat_template`) that raised a hard exception whenever
+an agent sent a turn without a genuine user message (typical during tool-loop "continue" steps),
+killing responses with an instant HTTP 500.
+
+**Applied fix:** the guard lines were surgically removed *in place* inside both GGUF blobs at the
+exact KV byte offsets, padding to original length so the GGUF layout is untouched. Verified: the
+previously-fatal no-user-message payload now returns HTTP 200 on both models; normal chats unchanged.
+This makes the fix immune to clients that bypass the proxy on :10101 and hit Ollama directly.
+
+**See `ollama-jinja-guard-fix/`** for the full record: README with reusable GGUF-KV locator snippet,
+idempotent re-patch tool for fresh re-imports, revert tooling, and untouched snapshot copies of both
+original templates. Note: a fresh pull/re-import of these models restores the strict template in a NEW
+blob digest — rerun the patch per that folder's docs. The `chatml-permissive.jinja` +
+proxy user-message workaround remain as belt-and-suspenders layers.
+
