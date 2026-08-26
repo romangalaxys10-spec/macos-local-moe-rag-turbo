@@ -269,6 +269,9 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                 msg['content'] = re.sub(r'<think>.*?</think>', '', assistant_text, flags=re.DOTALL)
                                 content = json.dumps(resp_data).encode('utf-8')
                         elif 'output' in resp_data:
+                            with open('/tmp/proxy-response.log', 'w') as log_f:
+                                import json
+                                log_f.write(json.dumps(resp_data['output'], indent=2))
                             # Strip the custom llama-server reasoning block completely
                             resp_data['output'] = [o for o in resp_data['output'] if o.get('type') != 'reasoning']
                             
