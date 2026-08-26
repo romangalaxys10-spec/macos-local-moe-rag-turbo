@@ -4,10 +4,20 @@ import urllib.request
 import json, os, re, sqlite3
 
 PORT = 10101
-TARGET_URL = "http://127.0.0.1:11435"
+TARGET_URL = "http://127.0.0.1:11434"
 import sys
 sys.path.insert(0, os.path.expanduser("~/.agents"))
 import rag_context_store as rag_store
+
+def get_target_url():
+    try:
+        req = urllib.request.Request("http://127.0.0.1:11435/health", method='GET')
+        with urllib.request.urlopen(req, timeout=0.3) as r:
+            if r.status == 200:
+                return "http://127.0.0.1:11435"
+    except Exception:
+        pass
+    return "http://127.0.0.1:11434"
 
 def get_rag_context(query, session_id=None):
     try:
@@ -75,7 +85,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_HEAD(self):
-        req = urllib.request.Request(f"{TARGET_URL}{self.path}")
+        req = urllib.request.Request(f"{get_target_url()}{self.path}")
         try:
             with urllib.request.urlopen(req) as resp:
                 self.send_response(resp.status)
@@ -121,7 +131,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             }).encode('utf-8'))
             return
 
-        req = urllib.request.Request(f"{TARGET_URL}{self.path}")
+        req = urllib.request.Request(f"{get_target_url()}{self.path}")
         try:
             with urllib.request.urlopen(req) as resp:
                 self.send_response(resp.status)
@@ -227,7 +237,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             pass
 
         req = urllib.request.Request(
-            f"{TARGET_URL}{self.path}",
+            f"{get_target_url()}{self.path}",
             data=body,
             headers={"Content-Type": "application/json"}
         )
