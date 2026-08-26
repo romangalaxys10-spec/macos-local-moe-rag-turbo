@@ -1,0 +1,9 @@
+FROM /Users/d/models/ornith-1.5-35b-uncensored/Ornith-1.5-35B-A3B-CRACK-Q3_K_M.gguf
+PARAMETER num_ctx 4096
+PARAMETER num_batch 256
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|endoftext|>"
+TEMPLATE """{{- range .Messages }}<|im_start|>{{ .Role }}
+{{ .Content }}<|im_end|>
+{{ end }}<|im_start|>assistant
+"""
