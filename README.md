@@ -4,18 +4,21 @@ A highly-customized, lightning-fast architecture to run large Mixture of Experts
 
 ## 🔥 Features
 
+* **Upgraded Model (Q3_K_M — 17.17 GB)**: Runs `Ornith-1.5-35B-A3B-CRACK-Q3_K_M.gguf` with quantized KV cache (`-ctk q4_0 -ctv q4_0`), delivering **44+ tokens/second** on Apple Silicon with deep reasoning.
+* **16,384 Context Window**: Eliminates `unexpected EOF` and context ceiling crashes during multi-thousand-token code generation.
 * **Zero-RAM SSD RAG Context Window**: A zero-dependency SQLite FTS5 (BM25) search engine (`rag_context_store.py`) that chunks and indexes your codebase on your SSD. Instead of consuming 20GB+ RAM to hold large contexts, it smartly queries your codebase and injects the top results directly into the hidden system prompt.
 * **Smart Streaming Proxy (`proxy-stream-optimizer.py`)**: 
-  * Intercepts and dynamically truncates historical context to strictly fit within your model's exact context limit (e.g. 8192 tokens), preventing the dreaded `exceeds available context size` errors when agentic tools send massive payloads.
-  * Filters out leaky `<think>` tags from DeepSeek-style reasoning models while keeping the underlying reasoning intact in the RAG memory.
-  * Normalizes the OpenAI Responses API formats so `llama-server` understands them natively.
+  * **Dynamic Backend Routing**: Auto-detects and seamlessly routes between standalone `llama-server` (:11435) and `Ollama` daemon (:11434).
+  * **Tool Call Argument Sanitizer**: Intercepts and validates all tool call arguments on the fly, preventing `unexpected end of JSON input` crashes.
+  * **Non-Blocking SSE Streaming**: Real-time token streaming that keeps sockets alive and resets client read deadlines.
+  * **Context Management**: Intercepts and dynamically truncates historical context to strictly fit within the window, avoiding prompt overflow.
 * **Background Daemon Indexer**: Automatically scans and re-indexes your files every 60 seconds (`rag-file-indexer.py`) without blocking your main workflow.
-* **Jinja Crash Patches**: A custom permissive ChatML Jinja template (`chatml-permissive.jinja`) that preserves 100% of the model's native tool-calling abilities while bypassing the infamous `Jinja Exception: System message must be at the beginning` and `No user query found` crashes caused by non-standard system prompts.
+* **100% Exception-Free Permissive Jinja**: Custom ChatML Jinja template (`chatml-permissive.jinja`) with 0 `raise_exception` statements, supporting native tool calling, safe string/mapping argument handling, and system/developer roles.
 
 ## 🛠️ Architecture
 
-1. **Model Layer**: `llama-server` (running via `com.user.ornith.spec.plist` on port 11435) with `--reasoning-format deepseek`.
-2. **Proxy Layer**: `proxy-stream-optimizer.py` (running on port 10101) sits between your client (like Codex CLI) and `llama-server`.
+1. **Model Layer**: `Ollama` / `llama-server` (running on port 11434 / 11435) with 16k context and Metal GPU acceleration.
+2. **Proxy Layer**: `proxy-stream-optimizer.py` (running on port 10101) sits between your client (like Codex CLI) and the model backend.
 3. **Data Layer**: SQLite FTS5 Database keeping track of codebase chunks and conversational history.
 
 ## 🚀 Setup & Installation
