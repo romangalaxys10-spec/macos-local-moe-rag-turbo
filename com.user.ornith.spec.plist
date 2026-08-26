@@ -16,9 +16,9 @@
         <string>--port</string>
         <string>11435</string>
         <string>-ngl</string>
-        <string>28</string>
+        <string>33</string>
         <string>-c</string>
-        <string>4096</string>
+        <string>8192</string>
         <string>-b</string>
         <string>256</string>
         <string>-ub</string>
