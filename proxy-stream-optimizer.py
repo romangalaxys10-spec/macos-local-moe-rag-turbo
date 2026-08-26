@@ -343,7 +343,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         pass
 
                     for k, v in resp.headers.items():
-                        if k.lower() != 'content-length':
+                        if k.lower() not in ('content-length', 'transfer-encoding'):
                             self.send_header(k, v)
                     self.send_header('Content-Length', str(len(content)))
                     self.end_headers()
