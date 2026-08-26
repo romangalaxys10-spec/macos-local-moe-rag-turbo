@@ -16,6 +16,51 @@ def get_rag_context(query, session_id=None):
         print(f"RAG error: {e}")
         return ""
 
+def sanitize_tool_calls(data):
+    if not isinstance(data, dict):
+        return data
+    try:
+        if 'choices' in data and isinstance(data['choices'], list):
+            for choice in data['choices']:
+                msg = choice.get('message', {})
+                if 'tool_calls' in msg and isinstance(msg['tool_calls'], list):
+                    for tc in msg['tool_calls']:
+                        fn = tc.get('function', {})
+                        args = fn.get('arguments')
+                        if args is None or args == '' or args == 'null':
+                            fn['arguments'] = '{}'
+                        elif isinstance(args, str):
+                            try:
+                                json.loads(args)
+                            except Exception:
+                                fn['arguments'] = json.dumps({"command": args}) if args.strip() else "{}"
+                        elif isinstance(args, dict):
+                            fn['arguments'] = json.dumps(args)
+                delta = choice.get('delta', {})
+                if 'tool_calls' in delta and isinstance(delta['tool_calls'], list):
+                    for tc in delta['tool_calls']:
+                        fn = tc.get('function', {})
+                        if 'arguments' in fn:
+                            args = fn['arguments']
+                            if args is None or args == 'null':
+                                fn['arguments'] = '{}'
+        elif 'output' in data and isinstance(data['output'], list):
+            for item in data['output']:
+                if item.get('type') == 'function_call':
+                    args = item.get('arguments')
+                    if args is None or args == '' or args == 'null':
+                        item['arguments'] = '{}'
+                    elif isinstance(args, str):
+                        try:
+                            json.loads(args)
+                        except Exception:
+                            item['arguments'] = json.dumps({"command": args}) if args.strip() else "{}"
+                    elif isinstance(args, dict):
+                        item['arguments'] = json.dumps(args)
+    except Exception:
+        pass
+    return data
+
 class ProxyHandler(http.server.BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -261,13 +306,13 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                     
                     try:
                         resp_data = json.loads(content)
+                        resp_data = sanitize_tool_calls(resp_data)
                         assistant_text = ""
                         if 'choices' in resp_data and len(resp_data['choices']) > 0:
                             msg = resp_data['choices'][0].get('message', {})
                             assistant_text = msg.get('content', '')
                             if assistant_text:
                                 msg['content'] = re.sub(r'<think>.*?</think>', '', assistant_text, flags=re.DOTALL)
-                                content = json.dumps(resp_data).encode('utf-8')
                         elif 'output' in resp_data:
                             with open('/tmp/proxy-response.log', 'w') as log_f:
                                 import json
@@ -280,8 +325,8 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                 assistant_text = msg.get('text', '')
                                 if assistant_text:
                                     msg['text'] = re.sub(r'<think>.*?</think>', '', assistant_text, flags=re.DOTALL)
-                            content = json.dumps(resp_data).encode('utf-8')
                         
+                        content = json.dumps(resp_data).encode('utf-8')
                         if assistant_text:
                             rag_store.store_conversation("default", "assistant", assistant_text)
                     except Exception:
