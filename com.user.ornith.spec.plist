@@ -8,7 +8,7 @@
     <array>
         <string>/Users/d/models/llama-b10585/llama-server</string>
         <string>-m</string>
-        <string>/Users/d/models/ornith-1.5-35b-uncensored/Ornith-1.5-35B-A3B-CRACK-Q2_K.gguf</string>
+        <string>/Users/d/models/ornith-1.5-35b-uncensored/Ornith-1.5-35B-A3B-CRACK-Q3_K_M.gguf</string>
         <string>--alias</string>
         <string>ornith-1.5-35b-uncensored,ornith-1.5:9b,ornith-1.5-35b-a3b:latest,qwen3.6:35b-a3b</string>
         <string>--host</string>
@@ -16,15 +16,13 @@
         <string>--port</string>
         <string>11435</string>
         <string>-ngl</string>
-        <string>99</string>
-        <string>-fa</string>
-        <string>on</string>
+        <string>28</string>
         <string>-c</string>
-        <string>8192</string>
+        <string>4096</string>
         <string>-b</string>
-        <string>512</string>
+        <string>256</string>
         <string>-ub</string>
-        <string>512</string>
+        <string>256</string>
         <string>-t</string>
         <string>8</string>
         <string>-tb</string>
@@ -33,8 +31,6 @@
         <string>q4_0</string>
         <string>-ctv</string>
         <string>q4_0</string>
-        <string>--spec-type</string>
-        <string>ngram-mod</string>
         <string>--load-mode</string>
         <string>mmap</string>
         <string>--reasoning-format</string>
