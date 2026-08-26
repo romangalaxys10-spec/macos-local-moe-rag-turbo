@@ -3,7 +3,36 @@ PARAMETER num_ctx 4096
 PARAMETER num_batch 256
 PARAMETER stop "<|im_end|>"
 PARAMETER stop "<|endoftext|>"
-TEMPLATE """{{- range .Messages }}<|im_start|>{{ .Role }}
-{{ .Content }}<|im_end|>
+PARAMETER stop "<|im_start|>"
+
+TEMPLATE """{{- if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{- if .Tools }}<|im_start|>system
+# Tools
+
+You have access to the following functions:
+
+<tools>
+{{- range .Tools }}
+{{ json . }}
+{{- end }}
+</tools>
+
+To call a function, respond with a JSON object inside <tool_call> tags:
+<tool_call>
+{"name": "function_name", "arguments": {"arg_1": "value_1"}}
+</tool_call>
+<|im_end|>
+{{ end }}{{- range .Messages }}<|im_start|>{{ .Role }}
+{{- if .Content }}
+{{ .Content }}
+{{- end }}
+{{- if .ToolCalls }}
+{{- range .ToolCalls }}
+<tool_call>
+{"name": "{{ .Function.Name }}", "arguments": {{ json .Function.Arguments }}}
+</tool_call>
+{{- end }}
+{{- end }}<|im_end|>
 {{ end }}<|im_start|>assistant
 """
