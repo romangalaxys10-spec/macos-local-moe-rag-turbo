@@ -63,3 +63,11 @@ original templates. Note: a fresh pull/re-import of these models restores the st
 blob digest — rerun the patch per that folder's docs. The `chatml-permissive.jinja` +
 proxy user-message workaround remain as belt-and-suspenders layers.
 
+## 🌙 Hardening round II — context cure, concurrency guards, RAM policy (2026-08-26 evening)
+* **Context ceiling cured at the source**: the imported models carried baked-in `num_ctx 16384` params layers — every request beyond 16k died no matter what. Params-only Modefile rebuilds (in `ollama-jinja-guard-fix/`) raise this to **32k** while preserving every original stop/batch/GPU setting — templates untouched, weights reused.
+* **Proxy (:10101) now defuses the trailing-assistant killer**: collapses repeated/paired assistant tails into one turn and appends a `(continue)` nudge before anything reaches strict backends. Trim budget lifted 15k→45k chars so real agent payloads flow without over-shaving.
+* **Anti-loop sampler**: ornith launcher runs `--repeat-penalty 1.12`, ending the degenerate rewrite-loops.
+* **One-model RAM policy** via new `com.user.ollama.single-model-env.plist`: max one LLM resident, flash attention, quantized KV (q8_0), 45s idle unload — measured prefill +13% and halved cache RAM.
+* **Live token HUD**: `token-hud.py` streams prompt-tokens / % / tok-s from the engine log in any Terminal.
+Full post-mortem chain lives in `ollama-jinja-guard-fix/README.md`.
+

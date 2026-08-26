@@ -1,0 +1,7 @@
+FROM ornith-1.5-35b-uncensored
+PARAMETER num_ctx 32768
+PARAMETER num_batch 128
+PARAMETER num_gpu 28
+PARAMETER stop "<|im_end|>"
+PARAMETER stop "<|endoftext|>"
+PARAMETER stop "<|im_start|>"

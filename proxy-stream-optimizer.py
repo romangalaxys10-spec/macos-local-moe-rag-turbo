@@ -71,6 +71,23 @@ def sanitize_tool_calls(data):
         pass
     return data
 
+def normalize_conversation_tail(msgs):
+    """Enforce what strict backends require: never end with 2+ assistant messages,
+    and always finish on a user/tool turn. Merges loop-duplicate assistants away."""
+    out = []
+    for m in msgs:
+        r = m.get('role')
+        if out and r == 'assistant' and out[-1].get('role') == 'assistant':
+            if json.dumps(m.get('content', '')) == json.dumps(out[-1].get('content', '')):
+                continue  # exact repetition loop artifact -> drop
+        out.append(m)
+    while len(out) >= 2 and out[-1].get('role') == 'assistant' and out[-2].get('role') == 'assistant':
+        out.pop(-2)  # keep the newest assistant of any remaining run
+    if out and out[-1].get('role') not in ('user', 'tool'):
+        out.append({"role": "user", "content": "(continue)"})
+    return out
+
+
 class ProxyHandler(http.server.BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
@@ -167,7 +184,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                 lean_input = [{"role": "developer", "content": [{"type": "input_text", "text": sys_prompt}]}]
                 recent = [i for i in data['input'] if isinstance(i, dict) and i.get('role') in ('user', 'assistant', 'tool')][-20:]
                 
-                MAX_CHARS = 15000
+                MAX_CHARS = 45000
                 current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
                 kept_input = []
                 for i in reversed(recent):
@@ -181,7 +198,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                     kept_input.append({"role": "user", "content": [{"type": "input_text", "text": user_text if user_text else "Hello"}]})
                 
                 lean_input.extend(kept_input)
-                data['input'] = lean_input
+                data['input'] = normalize_conversation_tail(lean_input)
                 body = json.dumps(data).encode('utf-8')
 
             elif 'messages' in data and isinstance(data['messages'], list):
@@ -214,7 +231,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                 recent_msgs = non_system_msgs[-20:]
                 
                 # Truncate older messages if the total payload is too large for 8k context (~24k chars)
-                MAX_CHARS = 15000
+                MAX_CHARS = 45000
                 current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
                 
                 # Iterate backwards to keep the newest messages first
@@ -231,7 +248,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                     kept_msgs.append({"role": "user", "content": user_text if user_text else "Hello"})
                 
                 lean_messages.extend(kept_msgs)
-                data['messages'] = lean_messages
+                data['messages'] = normalize_conversation_tail(lean_messages)
                 body = json.dumps(data).encode('utf-8')
         except Exception:
             pass
