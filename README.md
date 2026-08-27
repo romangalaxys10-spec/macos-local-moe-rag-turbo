@@ -71,3 +71,54 @@ proxy user-message workaround remain as belt-and-suspenders layers.
 * **Live token HUD**: `token-hud.py` streams prompt-tokens / % / tok-s from the engine log in any Terminal.
 Full post-mortem chain lives in `ollama-jinja-guard-fix/README.md`.
 
+## 🔁 2026-08-27 — engine migration: vLLM-Metal added → decommissioned · Unsloth Studio replaces Ollama
+
+This repo's control stack moved its serving layer twice today; history and tooling below.
+
+### Phase 1 — vLLM-Metal experiment (added, benchmarked, retired)
+`~/tools/vllm-install/` tools published under `vllm-metal/` here:
+- `use-model` — rewritten pure-bash switcher: flushes ollama residents (3-attempt verify),
+  pkills prior serve, HF_HUB_DISABLE_XET turbo-resume of MLX weights, health-polls ≤5 min.
+  Aliases: `abl`, `heretic`, `qwen35`, `gemma4`; warn-and-continue unload policy documented inline.
+- `setup-engine` — venv bootstrap for `~/.venv-vllm-metal`.
+- `fetch-heretic-gguf.py` — authenticated multi-stream HF fetch of the 6.1 GB i1-Q5_K_M HERETIC GGUF.
+- `bench-runner` + `serve-bench.sh` — repeatable warm-decode/prefill benchmarks writing verbatim
+  result lines (see README section below for verdict format).
+**Verdict:** mxfp8 9B dense served at 23.9 tok/s decode / 287 tok/s prefill vs ollama ~32 — kept
+only as opt-in lane; later the whole engine was dropped when Unsloth landed (same llama.cpp core,
+zero config burden). ⚠️ discipline rule learned: after any comparison bench, re-serve the USER'S
+previous selection.
+
+### Phase 2 — Unsloth Studio is now THE local engine (:8888)
+- Serving: `unsloth studio -p 8888` via LaunchAgent **com.user.unsloth.studio**
+  (KeepAlive, log `~/.unsloth/studio-server.log`). Ollama app/engine/agents fully removed;
+  legacy plists archived in `~/Library/LaunchAgents/retired-ollama-20260827/`.
+- Model migration: all Ollama blobs exported as named GGUFs with APFS `cp -c` clones into
+  `~/.cache/huggingface/hub/unsloth-local-ggufs/`, registered via `POST /api/hub/scan-folders`.
+  Served ids: highiq-heretic, qwen35-abl, qwen3.8-27b-uncensored, ornith-1.5-35b-uncensored,
+  ornith-1.5-9b, qwen3.8-27b-iq1 (+ mradermacher HF repo auto-detected).
+- One-model RAM policy preserved through Studio setting
+  `PUT /api/settings/openai-auto-switch`: enabled + idle_unload_active +
+  auto_unload_idle_seconds=600 + auto_unload_keep_kv=true.
+- pi wiring: provider `unsloth-local` (baseURL http://127.0.0.1:8888/v1) — see `pi/pi_models_resync.sh`
+  in this repo for the CRITICAL precedence fix:
+  `api_key = opts.get('apiKey') or (auth[pid].get('key') if pid in auth else None)`
+  (old script forwarded options.apiKey only for z-ai → every other provider shipped apiKey='EMPTY'
+  → upstreams answered 401 Invalid token payload).
+- Native macOS app: `/Applications/Unsloth Studio.app` — Swift/WKWebView shell,
+  source under `native-app/UnslothStudio.swift` (+ `native-app/Info.plist`). Rebuild:
+  `cd ~/path/to/repo/native-app && swiftc -O -target arm64-apple-macos13.0 UnslothStudio.swift \
+     -o "Unsloth Studio.app/Contents/MacOS/UnslothStudio" -framework WebKit && \
+   codesign --force -s - "Unsloth Studio.app"`
+  (⚠️ default target macosx28 makes LaunchServices reject the bundle with error -10825 on darwin-27;
+  direct exec still worked, which is why it looked healthy in terminal tests).
+- Credentials referenced ONLY by path in docs/scripts: `~/.unsloth/studio/auth/{zcode-api-key,zcode-admin.txt}`.
+
+### Debug war stories preserved
+- GGUF multiline chat template inside an ollama Modelfile MUST be triple-quoted:
+  `TEMPLATE """…"""` else import fails with "command must be one of from/license/…".
+- Thinking models need max_tokens ≥ ~400 or top-level content returns empty (reasoning eats budget);
+  streamed deltas arrive as `reasoning_content`.
+- Mimosa/PreToolUse hooks on this box block `curl | sh` installers and scripts composing shell
+  commands/paths from unvalidated strings — replicate installers natively instead
+  (uv venv + pip --no-deps + bundled NO_TORCH=1 installer), validate every path component.
