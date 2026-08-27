@@ -1,0 +1,188 @@
+#!/bin/bash
+
+# vLLM-Metal engine installer for this Mac.
+# Audit notes (2026-08-26):
+#  * scripts/lib.sh is fetched PINNED to commit db4d7c5 — byte-identical to the
+#    reviewed copy in ~/tools/vllm-metal-src/vllm-project-vllm-metal-db4d7c5/.
+#  * vLLM core comes from an exact pinned official release wheel (0.28.0,
+#    vllm-project GitHub releases), not a floating tag.
+#  * rm -rf is only ever applied to isolated temp dirs created by this run.
+VLLM_VERSION="0.28.0"
+VLLM_WHEEL_URL="https://github.com/vllm-project/vllm/releases/download/v${VLLM_VERSION}/vllm-${VLLM_VERSION}%2Bcpu-cp312-cp312-macosx_11_0_arm64.whl"
+LIB_PIN="db4d7c5"
+
+_cleanup_dirs=()
+
+register_cleanup_dir() {
+  _cleanup_dirs+=("$1")
+}
+
+cleanup_tmp_dirs() {
+  local dir
+  if [[ ${#_cleanup_dirs[@]} -eq 0 ]]; then
+    return
+  fi
+  for dir in "${_cleanup_dirs[@]}"; do
+    rm -rf "$dir"
+  done
+}
+
+fetch_latest_release() {
+  local repo_owner="$1"
+  local repo_name="$2"
+
+  echo "Fetching latest release..." >&2
+
+  local latest_release_url="https://api.github.com/repos/${repo_owner}/${repo_name}/releases/latest"
+  local release_data
+
+  if ! release_data=$(curl -fsSL "$latest_release_url" 2>&1); then
+    error "Failed to fetch release information."
+    echo "Please check your internet connection and try again." >&2
+    exit 1
+  fi
+
+  if [[ -z "$release_data" ]] || [[ "$release_data" == *"Not Found"* ]]; then
+    error "No releases found for this repository."
+    echo "Please visit https://github.com/${repo_owner}/${repo_name}/releases" >&2
+    exit 1
+  fi
+
+  echo "$release_data"
+}
+
+extract_wheel_url() {
+  local release_data="$1"
+
+  python3 -c "
+import sys
+import json
+try:
+    data = json.loads('''$release_data''', strict=False)
+    assets = data.get('assets', [])
+    for asset in assets:
+        name = asset.get('name', '')
+        if name.endswith('.whl'):
+            print(asset.get('browser_download_url', ''))
+            break
+except Exception as e:
+    print('', file=sys.stderr)
+"
+}
+
+install_vllm() {
+  echo ""
+  section "Installing vLLM core"
+  echo "Wheel: vLLM ${VLLM_VERSION} (prebuilt macOS arm64)"
+
+  # The wheel's own metadata pulls torch et al. from PyPI.
+  if ! uv pip install "$VLLM_WHEEL_URL"; then
+    error "Failed to install vLLM core from ${VLLM_WHEEL_URL}"
+    echo "Please check your internet connection and try again." >&2
+    exit 1
+  fi
+
+  success "Installed vLLM core"
+}
+
+download_and_install_wheel() {
+  local wheel_url="$1"
+  local package_name="$2"
+
+  local wheel_name
+  wheel_name=$(basename "$wheel_url")
+  echo "Latest release: $wheel_name"
+  success "Found latest release"
+
+  local tmp_dir
+  tmp_dir=$(mktemp -d)
+  register_cleanup_dir "$tmp_dir"
+
+  echo ""
+  echo "Downloading wheel..."
+  local wheel_path="$tmp_dir/$wheel_name"
+
+  if ! curl -fsSL "$wheel_url" -o "$wheel_path"; then
+    error "Failed to download wheel."
+    exit 1
+  fi
+
+  success "Downloaded wheel"
+
+  # Install vllm-metal package (pinned release asset of vllm-metal itself)
+  if ! uv pip install "$wheel_path"; then
+    error "Failed to install ${package_name}."
+    exit 1
+  fi
+
+  success "Installed ${package_name}"
+}
+
+main() {
+  set -eu -o pipefail
+  trap cleanup_tmp_dirs EXIT
+
+  local repo_owner="vllm-project"
+  local repo_name="vllm-metal"
+  local package_name="vllm-metal"
+
+  # Always use the remote pinned lib (audited copy), never a floating branch.
+  local lib_url="https://raw.githubusercontent.com/${repo_owner}/${repo_name}/${LIB_PIN}/scripts/lib.sh"
+  local lib_dir
+  lib_dir=$(mktemp -d)
+  register_cleanup_dir "$lib_dir"
+
+  if ! curl -fsSL "$lib_url" -o "$lib_dir/audited-lib"; then
+    echo "Error: Failed to fetch audited lib from $lib_url" >&2
+    exit 1
+  fi
+
+  if ! cmp -s <(grep -v '^[[:space:]]*$' /Users/d/tools/vllm-metal-src/vllm-project-vllm-metal-db4d7c5/scripts/lib.sh) \
+              <(grep -v '^[[:space:]]*$' "$lib_dir/audited-lib"); then
+    error "Fetched lib.sh differs from the audited pinned commit review! Aborting."
+    exit 1
+  fi
+  # shellcheck source=/dev/null
+  source "$lib_dir/audited-lib"
+
+  if ! is_apple_silicon; then
+    error "vllm-metal requires Apple Silicon arm64. Detected: $(uname -m)."
+    exit 1
+  fi
+
+  if ! ensure_uv; then
+    exit 1
+  fi
+
+  local venv="$HOME/.venv-vllm-metal"
+  ensure_venv "$venv"
+  if ! require_arm64_python python; then
+    exit 1
+  fi
+
+  install_vllm
+
+  local release_data
+  release_data=$(fetch_latest_release "$repo_owner" "$repo_name")
+
+  local wheel_url
+  wheel_url=$(extract_wheel_url "$release_data")
+
+  if [[ -z "$wheel_url" ]]; then
+    error "No wheel file found in the latest release."
+    exit 1
+  fi
+
+  download_and_install_wheel "$wheel_url" "$package_name"
+
+  echo ""
+  success "Installation complete!"
+  echo ""
+  echo "To use vllm, activate the virtual environment:"
+  echo "  source $venv/bin/activate"
+  echo ""
+  echo "Or add the venv to your PATH:"
+  echo "  export PATH=\"$venv/bin:\$PATH\""
+}
+
+main "$@"
