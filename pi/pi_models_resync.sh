@@ -38,7 +38,7 @@ for pid, p in provs_in.items():
         'baseUrl': opts['baseURL'],
         'api': 'openai-completions',
         'apiKey': api_key or 'EMPTY',
-        'models': [{'id': mid, 'name': m.get('name', mid)} for mid, m in p.get('models', {}).items()],
+        'models': [{'id': mid, 'name': m.get('name', mid), **({'limit': m['limit']} if m.get('limit') else {})} for mid, m in p.get('models', {}).items()],
     }
 
 dest = os.path.expanduser('~/.pi/agent/models.json')
