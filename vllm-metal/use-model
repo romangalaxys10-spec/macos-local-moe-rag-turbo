@@ -1,0 +1,95 @@
+#!/bin/bash
+# use-model — guaranteed-clean model switching for local engines.
+#   ./use-model <alias|full-hf-id>     serve on :8000 (kills old, unloads RAM first)
+#   ./use-model list                   show aliases
+set -uo pipefail
+
+VENV="$HOME/.venv-vllm-metal"
+RESULTS=/Users/d/sand-watch/vllm-bench-results.txt
+TS() { date +%H:%M:%S; }
+LOG() { echo "$(TS) $*"; }
+
+[ -f "$VENV/bin/activate" ] || { echo "❌ missing venv $VENV"; exit 1; }
+# shellcheck disable=SC1091
+source "$VENV/bin/activate"
+
+case "${1:-}" in
+  list)
+    echo "  heretic  TheCluster/Qwen3.5-9B-Claude-4.6-HighIQ-INSTRUCT-HERETIC-UNCENSORED-MLX-mxfp8"
+    echo "  abl      huihui-ai/Huihui-Qwen3.5-9B-abliterated-mlx-4bit"
+    echo "  qwen35   mlx-community/Qwen3.5-9B-4bit"
+    echo "  gemma4   lmstudio-community/gemma-4-12B-it-MLX-4bit"
+    exit 0 ;;
+  ""|-h|--help) echo "usage: use-model <heretic|abl|qwen35|gemma4|full-hf-id>"; exit 1 ;;
+esac
+
+case "$1" in
+  heretic) ID="TheCluster/Qwen3.5-9B-Claude-4.6-HighIQ-INSTRUCT-HERETIC-UNCENSORED-MLX-mxfp8"; FAMILY=qwen ;;
+  abl)     ID="huihui-ai/Huihui-Qwen3.5-9B-abliterated-mlx-4bit";                    FAMILY=qwen ;;
+  qwen35)  ID="mlx-community/Qwen3.5-9B-4bit";                                       FAMILY=qwen ;;
+  gemma4)  ID="lmstudio-community/gemma-4-12B-it-MLX-4bit";                          FAMILY=gemma ;;
+  *)       ID="$1";                                                                  FAMILY="" ;;
+esac
+
+export HF_HUB_DISABLE_XET=1
+export HF_HUB_ENABLE_HF_TRANSFER=1
+
+LOG() { echo "$(date +%H:%M:%S) $*" | tee -a "$RESULTS"; }
+
+echo "$(TS) === switching engine → $ID ===" >> "$RESULTS"
+
+# 0) politely unload every Ollama resident (retry loop, loud if unverifiable)
+flush_ok=false
+for attempt in 1 2 3; do
+  PS_JSON=$(curl -s --max-time 6 http://127.0.0.1:11434/api/ps || true)
+  NAMES=$(echo "$PS_JSON" | python3 -c 'import json,sys;print(" ".join(x["name"] for x in json.load(sys.stdin).get("models",[])))' 2>/dev/null || echo "")
+  if [ -z "$NAMES" ]; then LOG "no ollama residents ✓"; flush_ok=true; break; fi
+  for n in $NAMES; do
+    curl -s -o /dev/null http://127.0.0.1:11434/api/generate \
+      -d "{\"model\":\"$n\",\"keep_alive\":0,\"prompt\":\"x\",\"options\":{\"num_predict\":0}}"
+    LOG "unloaded resident $n"
+  done
+  sleep 2
+done
+$flush_ok || LOG "⚠️ could not fully verify ollama unload — continuing"
+
+# 1) kill any previous vllm server & wait for port 8000 to actually free
+pkill -f "vllm serve" 2>/dev/null || true
+for _ in $(seq 1 20); do
+  CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 2 localhost:8000/health 2>/dev/null || echo 000)
+  [ "$CODE" = "000" ] && break
+  sleep 1
+done
+
+# 2) make sure weights are present (turbo resume; cached = instant)
+for i in $(seq 1 30); do
+  DL=$(python3 - <<PYEOF
+from huggingface_hub import snapshot_download
+import time
+t0=time.time()
+p=snapshot_download("$ID")
+print(f"{time.time()-t0:.0f}s {p}")
+PYEOF
+  ) && { LOG "weights ready ($DL)"; break; } || { LOG "fetch hiccup, retry $i/3"; sleep 3; }
+done
+
+# 3) launch with the right flags per family
+EXTRA=""
+[ "$FAMILY" = "qwen" ] && EXTRA="--enable-auto-tool-choice --tool-call-parser qwen3_xml --enable-prefix-caching"
+nohup vllm serve "$ID" --port 8000 --max-model-len 32768 $EXTRA \
+  > /tmp/vllm-use.log 2>&1 &
+SRV=$!
+LOG "launched pid=$SRV model=$ID"
+
+UP=no
+for i in $(seq 1 60); do
+  sleep 5
+  if ! kill -0 "$SRV" 2>/dev/null; then LOG "server died early — tail /tmp/vllm-use.log"; tail -8 /tmp/vllm-use.log; exit 1; fi
+  CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 localhost:8000/health 2>/dev/null || echo 000)
+  if [ "$CODE" = "200" ]; then UP=yes; LOG "HEALTHY after ~$((i*5))s"; break; fi
+done
+[ "$UP" = yes ] || { LOG "never became healthy"; exit 1; }
+
+SERVED=$(curl -s localhost:8000/v1/models | python3 -c 'import json,sys;print(json.load(sys.stdin)["data"][0]["id"])')
+LOG "✅ SERVING: $SERVED"
+echo "$(TS) SWITCHED→ $SERVED" >> "$RESULTS"
