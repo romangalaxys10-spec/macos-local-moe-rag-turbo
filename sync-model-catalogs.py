@@ -100,43 +100,58 @@ def sync_catalogs():
     codex_models = []
     for m in ALL_MODELS:
         entry = {
-            "additional_speed_tiers": [],
-            "apply_patch_tool_type": None,
-            "auto_compact_token_limit": None,
-            "availability_nux": None,
-            "base_instructions": "You are Codex, an expert coding agent.",
-            "context_window": m["context_window"],
-            "default_reasoning_level": None,
-            "default_reasoning_summary": "auto",
-            "default_verbosity": None,
-            "description": m["description"],
+            "slug": m["slug"],
             "display_name": m["display_name"],
+            "description": m["description"],
+            "default_reasoning_level": None,
+            "supported_reasoning_levels": [],
+            "shell_type": "default",
+            "visibility": "list",
+            "supported_in_api": True,
+            "priority": 0,
+            "additional_speed_tiers": [],
+            "service_tiers": None,
+            "default_service_tier": None,
+            "availability_nux": None,
+            "upgrade": None,
+            "model_messages": None,
+            "include_skills_usage_instructions": True,
+            "include_plugin_usage_instructions": True,
+            "include_apps_usage_instructions": True,
+            "supports_reasoning_summary_parameter": True,
+            "default_reasoning_summary": "auto",
+            "support_verbosity": False,
+            "default_verbosity": None,
+            "apply_patch_tool_type": None,
+            "web_search_tool_type": None,
+            "truncation_policy": {
+                "mode": "tokens",
+                "limit": 10000
+            },
+            "supports_image_detail_original": False,
+            "context_window": m["context_window"],
+            "max_context_window": m["context_window"],
+            "auto_compact_token_limit": None,
+            "comp_hash": None,
             "effective_context_window_percent": 95,
             "experimental_supported_tools": [],
             "input_modalities": ["text"],
-            "max_context_window": m["context_window"],
-            "model_messages": None,
-            "priority": 0,
-            "shell_type": "default",
-            "slug": m["slug"],
-            "support_verbosity": False,
-            "supported_in_api": True,
-            "supported_reasoning_levels": [],
-            "supports_image_detail_original": False,
-            "supports_parallel_tool_calls": False,
-            "supports_reasoning_summaries": False,
-            "visibility": "list",
-            "system_keywords": [],
-            "tool_call_type": "inline_tags",
-            "tools": [],
-            "truncation_strategy": {"type": "rolling_window"}
+            "supports_search_tool": False,
+            "use_responses_lite": False,
+            "node_repl_auto_review_required": False,
+            "node_repl_disabled": True,
+            "auto_review_model_override": None,
+            "model_specialty": None,
+            "tool_mode": "direct",
+            "multi_agent_version": "v2",
+            "base_instructions": "You are Codex, an expert coding agent."
         }
         codex_models.append(entry)
 
     with open(CODEX_PATH, "w") as f:
         json.dump({"models": codex_models}, f, indent=2)
 
-    print(f"[catalog-sync] Synchronized {len(codex_models)} models to Codex ({CODEX_PATH})")
+    print(f"[catalog-sync] Synchronized {len(codex_models)} models with full Rust schema to Codex ({CODEX_PATH})")
 
     # 2. Update OpenClaude ~/.openclaude.json
     if os.path.exists(OPENCLAUDE_PATH):
