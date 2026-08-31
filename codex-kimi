@@ -1,0 +1,2 @@
+#!/bin/bash
+exec codex --config ~/.codex/kimi-k3-colibri.config.toml "$@"
