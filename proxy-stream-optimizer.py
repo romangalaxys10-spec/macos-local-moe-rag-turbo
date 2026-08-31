@@ -32,9 +32,19 @@ def is_colibri_model(model_name):
             return True
     return False
 
+def is_colibri_online():
+    try:
+        req = urllib.request.Request(f"{COLIBRI_URL}/v1/models", method='GET')
+        with urllib.request.urlopen(req, timeout=0.2) as r:
+            return r.status == 200
+    except Exception:
+        return False
+
 def get_target_url(model_name=None):
     if model_name and is_colibri_model(model_name):
-        return COLIBRI_URL
+        if is_colibri_online():
+            return COLIBRI_URL
+        # Colibri backend is currently stopped -> auto-fallback to active in-memory model
     try:
         req = urllib.request.Request(f"{LLAMA_SPEC_URL}/health", method='GET')
         with urllib.request.urlopen(req, timeout=0.3) as r:
