@@ -1,0 +1,7 @@
+{
+  "env": {
+    "OPENAI_BASE_URL": "http://127.0.0.1:10101/v1",
+    "OPENAI_MODEL": "qwen2.5-coder-32b-uncensored",
+    "OPENAI_API_KEY": "local-gateway"
+  }
+}
