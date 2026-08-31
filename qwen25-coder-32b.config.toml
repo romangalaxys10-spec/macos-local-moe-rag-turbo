@@ -1,0 +1,8 @@
+model = "qwen2.5-coder-32b-uncensored"
+model_provider = "ollama-local"
+
+[model_providers.ollama-local]
+name = "Qwen 2.5 Coder 32B Uncensored (Local Metal GPU)"
+base_url = "http://127.0.0.1:10101/v1"
+wire_api = "responses"
+requires_openai_auth = false
