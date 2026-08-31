@@ -1,0 +1,206 @@
+{
+  "numStartups": 4,
+  "tipsHistory": {
+    "atomic-setup-local": 1,
+    "new-user-warmup": 1,
+    "plan-mode-for-complex-tasks": 1,
+    "memory-command": 1,
+    "theme-command": 1,
+    "status-line": 1,
+    "prompt-queue": 1,
+    "enter-to-steer-in-relatime": 1,
+    "todo-list": 1,
+    "ide-upsell-external-terminal": 1,
+    "install-github-app": 1,
+    "install-slack-app": 1,
+    "drag-and-drop-images": 2,
+    "paste-images-mac": 2,
+    "double-esc-code-restore": 2,
+    "continue": 2,
+    "shift-tab": 3,
+    "image-paste": 3
+  },
+  "promptQueueUseCount": 3,
+  "providerProfiles": [
+    {
+      "id": "provider_qwen2_5_coder_32b_uncensored",
+      "name": "Qwen 2.5 Coder 32B Uncensored",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "qwen2.5-coder-32b-uncensored",
+      "apiKey": "local-gateway"
+    },
+    {
+      "id": "provider_ornith_1_5_35b_uncensored",
+      "name": "Ornith 35B MoE (45 t/s)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "ornith-1.5-35b-uncensored",
+      "apiKey": "local-gateway"
+    },
+    {
+      "id": "provider_qwen3_8_27b_uncensored",
+      "name": "Qwen 3.8 27B Uncensored",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "qwen3.8-27b-uncensored",
+      "apiKey": "local-gateway"
+    },
+    {
+      "id": "provider_glm_5_2_colibri",
+      "name": "GLM-5.2 (744B Colibr\u00ec MoE)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "glm-5.2-colibri",
+      "apiKey": "local-gateway"
+    },
+    {
+      "id": "provider_glm_5_3_flash_colibri",
+      "name": "GLM-5.3-Flash (321B Colibr\u00ec Vision)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "glm-5.3-flash-colibri",
+      "apiKey": "local-gateway"
+    },
+    {
+      "id": "provider_deepseek_v4_colibri",
+      "name": "DeepSeek V4 Flash (284B Colibr\u00ec)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "deepseek-v4-colibri",
+      "apiKey": "local-gateway"
+    },
+    {
+      "id": "provider_kimi_k3_colibri",
+      "name": "Kimi K3 (2.8T Colibr\u00ec MoE)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "kimi-k3-colibri",
+      "apiKey": "local-gateway"
+    },
+    {
+      "id": "provider_qwen38_colibri",
+      "name": "Qwen 3.8 (125B Colibr\u00ec MoE)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "qwen38-colibri",
+      "apiKey": "local-gateway"
+    },
+    {
+      "id": "provider_qwen36_colibri",
+      "name": "Qwen 3.6 (35B Colibr\u00ec MoE)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "qwen36-colibri",
+      "apiKey": "local-gateway"
+    },
+    {
+      "id": "provider_olmoe_colibri",
+      "name": "OLMoE (7B Colibr\u00ec MoE)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "olmoe-colibri",
+      "apiKey": "local-gateway"
+    }
+  ],
+  "openaiAdditionalModelOptionsCacheByProfile": {
+    "provider_local_turbo_35b": [
+      {
+        "value": "ornith-1.5-35b-uncensored",
+        "label": "ornith-1.5-35b-uncensored",
+        "description": "Provider: Local Turbo MoE (Ornith 35B 45 t/s)"
+      }
+    ],
+    "provider_colibri_glm53": [
+      {
+        "value": "glm-5.3-flash-colibri",
+        "label": "glm-5.3-flash-colibri",
+        "description": "Provider: Colibr\u00ec GLM-5.3-Flash (321B MoE)"
+      }
+    ]
+  },
+  "firstStartTime": "2026-08-31T12:01:23.345Z",
+  "opusProMigrationComplete": true,
+  "sonnet1m45MigrationComplete": true,
+  "migrationVersion": 11,
+  "changelogLastFetched": 1788177684337,
+  "activeProviderProfileId": "provider_colibri_glm53",
+  "openaiAdditionalModelOptionsCache": [
+    {
+      "value": "glm-5.3-flash-colibri",
+      "label": "glm-5.3-flash-colibri",
+      "description": "Provider: Colibr\u00ec GLM-5.3-Flash (321B MoE)"
+    }
+  ],
+  "appleTerminalSetupInProgress": false,
+  "appleTerminalBackupPath": "/Users/d/Library/Preferences/com.apple.Terminal.plist.bak",
+  "optionAsMetaKeyInstalled": true,
+  "projects": {
+    "/Users/d": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": false,
+      "projectOnboardingSeenCount": 0,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesApprovedForUser": false,
+      "hasClaudeMdExternalIncludesWarningShown": false,
+      "hasClaudeMdExternalIncludesWarningShownForUser": false,
+      "hasCompletedProjectOnboarding": true,
+      "lastCost": 0,
+      "lastAPIDuration": 10174,
+      "lastAPIDurationWithoutRetries": 10172,
+      "lastToolDuration": 0,
+      "lastDuration": 19843,
+      "lastLinesAdded": 0,
+      "lastLinesRemoved": 0,
+      "lastTotalInputTokens": 0,
+      "lastTotalOutputTokens": 0,
+      "lastTotalCacheCreationInputTokens": 0,
+      "lastTotalCacheReadInputTokens": 0,
+      "lastTotalWebSearchRequests": 0,
+      "lastFpsAverage": 15.28,
+      "lastFpsLow1Pct": 127.28,
+      "lastModelUsage": {
+        "glm-5.3-flash-colibri": {
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0,
+          "webSearchRequests": 0,
+          "costUSD": 0
+        }
+      },
+      "lastSessionId": "aa020917-dd85-45b3-ad44-1c4ef383c4be",
+      "lastSessionMetrics": {
+        "frame_duration_ms_count": 296,
+        "frame_duration_ms_min": 0.04729200000019773,
+        "frame_duration_ms_max": 11.761042000000089,
+        "frame_duration_ms_avg": 1.2154273682432783,
+        "frame_duration_ms_p50": 0.8541879999997946,
+        "frame_duration_ms_p95": 3.0732812500000364,
+        "frame_duration_ms_p99": 7.847690200000011
+      }
+    }
+  },
+  "hasCompletedOnboarding": true,
+  "lastOnboardingVersion": "99.0.0",
+  "userID": "01f3f6cc7fb7f579d1aa945aefb66215951c41e51d08316e0b807e793592a2fa",
+  "sponsoredTipsHistory": {
+    "lastShownAt": 1,
+    "totalShown": 1
+  },
+  "officialMarketplaceAutoInstallAttempted": true,
+  "officialMarketplaceAutoInstalled": true,
+  "additionalModelOptionsCache": [
+    {
+      "value": "ornith-1.5-35b-a3b:latest",
+      "label": "ornith-1.5-35b-a3b:latest",
+      "description": "Discovered from OpenAI-compatible endpoint"
+    }
+  ],
+  "additionalModelOptionsCacheScope": "openai:http://127.0.0.1:10101/v1:7ddeb5300db1d137",
+  "clientDataCache": null
+}
