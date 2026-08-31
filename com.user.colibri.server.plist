@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.user.colibri.server</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/d/.local/bin/colibri-manager</string>
+        <string>start</string>
+        <string>default</string>
+    </array>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>KeepAlive</key>
+    <false/>
+    <key>StandardOutPath</key>
+    <string>/Users/d/.ollama/colibri_server.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/d/.ollama/colibri_server.log</string>
+</dict>
+</plist>
