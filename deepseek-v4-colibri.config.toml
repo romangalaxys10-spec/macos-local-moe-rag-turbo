@@ -6,5 +6,5 @@ model_reasoning_effort = "none"
 [model_providers.ollama-local]
 name = "Colibri Frontier MoE (DeepSeek-V4 284B)"
 base_url = "http://127.0.0.1:10101/v1"
-wire_api = "openai"
+wire_api = "responses"
 requires_openai_auth = false
