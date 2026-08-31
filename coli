@@ -1,0 +1,2 @@
+#!/bin/bash
+exec /Users/d/.local/bin/python3.11 /Users/d/.local/colibri/c/coli "$@"
