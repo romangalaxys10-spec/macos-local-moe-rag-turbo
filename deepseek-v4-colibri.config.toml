@@ -1,10 +1,8 @@
 model = "deepseek-v4-colibri"
 model_provider = "ollama-local"
-model_catalog_json = "/Users/d/.codex/ollama-launch-models.json"
-model_reasoning_effort = "none"
 
 [model_providers.ollama-local]
-name = "Colibri Frontier MoE (DeepSeek-V4 284B)"
+name = "DeepSeek V4 Flash (284B Colibrì)"
 base_url = "http://127.0.0.1:10101/v1"
 wire_api = "responses"
 requires_openai_auth = false
