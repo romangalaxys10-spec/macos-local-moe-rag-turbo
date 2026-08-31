@@ -110,7 +110,7 @@ def sync_catalogs():
             "supported_in_api": True,
             "priority": 0,
             "additional_speed_tiers": [],
-            "service_tiers": None,
+            "service_tiers": [],
             "default_service_tier": None,
             "availability_nux": None,
             "upgrade": None,
