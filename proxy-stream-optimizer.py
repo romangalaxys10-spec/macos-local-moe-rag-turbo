@@ -227,98 +227,106 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get('Content-Length', 0))
         body = self.rfile.read(length)
+        data = None
+        user_text = ""
 
         try:
             data = json.loads(body.decode('utf-8'))
-            user_text = ""
-            if 'input' in data and isinstance(data['input'], list):
-                sys_prompt = "You are a helpful coding assistant."
-                for item in reversed(data['input']):
-                    if isinstance(item, dict) and item.get('role') == 'user':
-                        c = item.get('content')
-                        if isinstance(c, str):
-                            user_text = c
-                        elif isinstance(c, list):
-                            user_text = " ".join([b.get('text', '') for b in c if isinstance(b, dict)])
-                        break
-
-                rag_snippet = get_rag_context(user_text) if user_text else ""
-                if rag_snippet:
-                    sys_prompt += f"\n\n{rag_snippet}"
-
-                lean_input = [{"role": "developer", "content": [{"type": "input_text", "text": sys_prompt}]}]
-                recent = [i for i in data['input'] if isinstance(i, dict) and i.get('role') in ('user', 'assistant', 'tool')][-20:]
-                
-                MAX_CHARS = 45000
-                current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
-                kept_input = []
-                for i in reversed(recent):
-                    c = i.get('content', '')
-                    c_str = json.dumps(c) if isinstance(c, list) else str(c)
-                    if current_chars + len(c_str) > MAX_CHARS:
-                        break
-                    kept_input.insert(0, i)
-                    current_chars += len(c_str)
-                if not any(i.get('role') == 'user' for i in kept_input):
-                    kept_input.append({"role": "user", "content": [{"type": "input_text", "text": user_text if user_text else "Hello"}]})
-                
-                lean_input.extend(kept_input)
-                data['input'] = normalize_conversation_tail(lean_input)
-                body = json.dumps(data).encode('utf-8')
-
-            elif 'messages' in data and isinstance(data['messages'], list):
-                messages = data['messages']
-                for m in reversed(messages):
-                    if m.get('role') == 'user':
-                        c = m.get('content')
-                        if isinstance(c, str):
-                            user_text = c
-                        elif isinstance(c, list):
-                            user_text = " ".join([b.get('text', '') for b in c if isinstance(b, dict)])
-                        break
-
-                rag_snippet = get_rag_context(user_text) if user_text else ""
-                sys_prompt = "You are a helpful coding assistant. Answer concisely and accurately."
-                if rag_snippet:
-                    sys_prompt += f"\n\n{rag_snippet}"
-
-                # Extract and combine any existing system prompts so they only appear once at index 0
-                non_system_msgs = []
-                for m in messages:
-                    if m.get('role') in ('system', 'developer'):
-                        c = m.get('content')
-                        if isinstance(c, str) and c not in sys_prompt:
-                            sys_prompt += f"\n\n{c}"
-                    elif m.get('role') in ('user', 'assistant', 'tool'):
-                        non_system_msgs.append(m)
-
-                lean_messages = [{"role": "system", "content": sys_prompt}]
-                recent_msgs = non_system_msgs[-20:]
-                
-                # Truncate older messages if the total payload is too large for 8k context (~24k chars)
-                MAX_CHARS = 45000
-                current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
-                
-                # Iterate backwards to keep the newest messages first
-                kept_msgs = []
-                for m in reversed(recent_msgs):
-                    c = m.get('content', '')
-                    c_str = c if isinstance(c, str) else json.dumps(c)
-                    if current_chars + len(c_str) > MAX_CHARS:
-                        break
-                    kept_msgs.insert(0, m)
-                    current_chars += len(c_str)
-
-                if not any(m.get('role') == 'user' for m in kept_msgs):
-                    kept_msgs.append({"role": "user", "content": user_text if user_text else "Hello"})
-                
-                lean_messages.extend(kept_msgs)
-                data['messages'] = normalize_conversation_tail(lean_messages)
-                body = json.dumps(data).encode('utf-8')
         except Exception:
-            pass
+            data = None
 
-        target_backend = get_target_url(data.get('model')) if isinstance(data, dict) else get_target_url()
+        if isinstance(data, dict):
+            try:
+                if 'input' in data and isinstance(data['input'], list):
+                    sys_prompt = "You are a helpful coding assistant."
+                    for item in reversed(data['input']):
+                        if isinstance(item, dict) and item.get('role') == 'user':
+                            c = item.get('content')
+                            if isinstance(c, str):
+                                user_text = c
+                            elif isinstance(c, list):
+                                user_text = " ".join([b.get('text', '') for b in c if isinstance(b, dict)])
+                            break
+
+                    rag_snippet = get_rag_context(user_text) if user_text else ""
+                    if rag_snippet:
+                        sys_prompt += f"\n\n{rag_snippet}"
+
+                    lean_input = [{"role": "developer", "content": [{"type": "input_text", "text": sys_prompt}]}]
+                    recent = [i for i in data['input'] if isinstance(i, dict) and i.get('role') in ('user', 'assistant', 'tool')][-20:]
+                    
+                    MAX_CHARS = 45000
+                    current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
+                    kept_input = []
+                    for i in reversed(recent):
+                        c = i.get('content', '')
+                        c_str = json.dumps(c) if isinstance(c, list) else str(c)
+                        if current_chars + len(c_str) > MAX_CHARS:
+                            break
+                        kept_input.insert(0, i)
+                        current_chars += len(c_str)
+                    if not any(i.get('role') == 'user' for i in kept_input):
+                        kept_input.append({"role": "user", "content": [{"type": "input_text", "text": user_text if user_text else "Hello"}]})
+                    
+                    lean_input.extend(kept_input)
+                    data['input'] = normalize_conversation_tail(lean_input)
+                    body = json.dumps(data).encode('utf-8')
+
+                elif 'messages' in data and isinstance(data['messages'], list):
+                    messages = data['messages']
+                    for m in reversed(messages):
+                        if isinstance(m, dict) and m.get('role') == 'user':
+                            c = m.get('content')
+                            if isinstance(c, str):
+                                user_text = c
+                            elif isinstance(c, list):
+                                user_text = " ".join([b.get('text', '') for b in c if isinstance(b, dict)])
+                            break
+
+                    rag_snippet = get_rag_context(user_text) if user_text else ""
+                    sys_prompt = "You are a helpful coding assistant. Answer concisely and accurately."
+                    if rag_snippet:
+                        sys_prompt += f"\n\n{rag_snippet}"
+
+                    # Extract and combine any existing system prompts so they only appear once at index 0
+                    non_system_msgs = []
+                    for m in messages:
+                        if isinstance(m, dict):
+                            if m.get('role') in ('system', 'developer'):
+                                c = m.get('content')
+                                if isinstance(c, str) and c not in sys_prompt:
+                                    sys_prompt += f"\n\n{c}"
+                            elif m.get('role') in ('user', 'assistant', 'tool'):
+                                non_system_msgs.append(m)
+
+                    lean_messages = [{"role": "system", "content": sys_prompt}]
+                    recent_msgs = non_system_msgs[-20:]
+                    
+                    # Truncate older messages if the total payload is too large for 8k context (~24k chars)
+                    MAX_CHARS = 45000
+                    current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
+                    
+                    # Iterate backwards to keep the newest messages first
+                    kept_msgs = []
+                    for m in reversed(recent_msgs):
+                        c = m.get('content', '')
+                        c_str = c if isinstance(c, str) else json.dumps(c)
+                        if current_chars + len(c_str) > MAX_CHARS:
+                            break
+                        kept_msgs.insert(0, m)
+                        current_chars += len(c_str)
+
+                    if not any(m.get('role') == 'user' for m in kept_msgs):
+                        kept_msgs.append({"role": "user", "content": user_text if user_text else "Hello"})
+                    
+                    lean_messages.extend(kept_msgs)
+                    data['messages'] = normalize_conversation_tail(lean_messages)
+                    body = json.dumps(data).encode('utf-8')
+            except Exception:
+                pass
+
+        model_name = data.get('model') if isinstance(data, dict) else None
+        target_backend = get_target_url(model_name)
         req = urllib.request.Request(
             f"{target_backend}{self.path}",
             data=body,
