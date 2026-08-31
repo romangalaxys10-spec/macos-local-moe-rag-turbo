@@ -1,0 +1,2 @@
+#!/bin/bash
+exec /Users/d/.local/node-v22/bin/openclaude --settings ~/.openclaude/settings.colibri-glm.json "$@"
