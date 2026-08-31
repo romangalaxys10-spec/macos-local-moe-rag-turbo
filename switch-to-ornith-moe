@@ -1,0 +1,16 @@
+#!/bin/bash
+echo "==> Switching active local model to Ornith 35B MoE (45 t/s)..."
+pkill -9 -f "llama-server" 2>/dev/null || true
+launchctl unload -w ~/Library/LaunchAgents/com.user.qwen25coder.plist 2>/dev/null || true
+launchctl unload -w ~/Library/LaunchAgents/com.user.ornith.spec.plist 2>/dev/null || true
+sleep 1
+launchctl load -w ~/Library/LaunchAgents/com.user.ornith.spec.plist
+echo "==> Loading Ornith 35B MoE into Metal GPU RAM..."
+for i in {1..30}; do
+  if curl -s http://127.0.0.1:11435/health | grep -q '"status":"ok"'; then
+    echo "==> Ornith 35B MoE is ONLINE and ready at http://127.0.0.1:11435"
+    exit 0
+  fi
+  sleep 1
+done
+echo "==> Model is still loading in background. Check: tail -f ~/.ollama/spec_server.log"
