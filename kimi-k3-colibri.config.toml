@@ -1,0 +1,10 @@
+model = "kimi-k3-colibri"
+model_provider = "ollama-local"
+model_catalog_json = "/Users/d/.codex/ollama-launch-models.json"
+model_reasoning_effort = "none"
+
+[model_providers.ollama-local]
+name = "Colibri Frontier MoE (Kimi K3 2.8T)"
+base_url = "http://127.0.0.1:10101/v1"
+wire_api = "openai"
+requires_openai_auth = false
