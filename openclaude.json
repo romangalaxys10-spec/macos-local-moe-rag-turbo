@@ -151,10 +151,10 @@
       "hasClaudeMdExternalIncludesWarningShownForUser": false,
       "hasCompletedProjectOnboarding": true,
       "lastCost": 0,
-      "lastAPIDuration": 10174,
-      "lastAPIDurationWithoutRetries": 10172,
+      "lastAPIDuration": 5447,
+      "lastAPIDurationWithoutRetries": 5445,
       "lastToolDuration": 0,
-      "lastDuration": 19843,
+      "lastDuration": 51031,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
       "lastTotalInputTokens": 0,
@@ -162,10 +162,10 @@
       "lastTotalCacheCreationInputTokens": 0,
       "lastTotalCacheReadInputTokens": 0,
       "lastTotalWebSearchRequests": 0,
-      "lastFpsAverage": 15.28,
-      "lastFpsLow1Pct": 127.28,
+      "lastFpsAverage": 12.76,
+      "lastFpsLow1Pct": 186.03,
       "lastModelUsage": {
-        "glm-5.3-flash-colibri": {
+        "qwen2.5-coder-32b-uncensored": {
           "inputTokens": 0,
           "outputTokens": 0,
           "cacheReadInputTokens": 0,
@@ -174,15 +174,15 @@
           "costUSD": 0
         }
       },
-      "lastSessionId": "aa020917-dd85-45b3-ad44-1c4ef383c4be",
+      "lastSessionId": "f1ff9fa0-9d38-4029-a495-4df71dd27083",
       "lastSessionMetrics": {
-        "frame_duration_ms_count": 296,
-        "frame_duration_ms_min": 0.04729200000019773,
-        "frame_duration_ms_max": 11.761042000000089,
-        "frame_duration_ms_avg": 1.2154273682432783,
-        "frame_duration_ms_p50": 0.8541879999997946,
-        "frame_duration_ms_p95": 3.0732812500000364,
-        "frame_duration_ms_p99": 7.847690200000011
+        "frame_duration_ms_count": 645,
+        "frame_duration_ms_min": 0.05887500000244472,
+        "frame_duration_ms_max": 7.5555420000000595,
+        "frame_duration_ms_avg": 1.1840159596899256,
+        "frame_duration_ms_p50": 0.6849590000001626,
+        "frame_duration_ms_p95": 3.2827243999960047,
+        "frame_duration_ms_p99": 5.292989480001442
       }
     }
   },
