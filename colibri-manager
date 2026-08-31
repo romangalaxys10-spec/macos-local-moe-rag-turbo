@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+import os
+import sys
+import json
+import time
+import subprocess
+import urllib.request
+
+PYTHON = "/Users/d/.local/bin/python3.11"
+COLIBRI_DIR = os.path.expanduser("~/.local/colibri/c")
+MODELS_DIR = os.path.expanduser("~/models/colibri")
+LOG_FILE = os.path.expanduser("~/.ollama/colibri_server.log")
+PID_FILE = os.path.expanduser("~/.ollama/colibri_server.pid")
+PORT = 8080
+
+os.makedirs(MODELS_DIR, exist_ok=True)
+os.makedirs(os.path.expanduser("~/.ollama"), exist_ok=True)
+
+def print_help():
+    print("""
+🐦 Colibrì Multi-Tier AI Manager
+
+Usage:
+  colibri-manager start <model_path_or_name> [--port 8080] [--gpu auto]
+  colibri-manager stop
+  colibri-manager status
+  colibri-manager web <model_path_or_name>
+  colibri-manager plan <model_path_or_name>
+  colibri-manager list
+  colibri-manager doctor [model_path_or_name]
+
+Examples:
+  colibri-manager plan ~/models/colibri/GLM-5.2-colibri-int4
+  colibri-manager start ~/models/colibri/GLM-5.2-colibri-int4
+  colibri-manager web ~/models/colibri/GLM-5.2-colibri-int4
+  colibri-manager stop
+""")
+
+def resolve_model_path(name):
+    if os.path.exists(name):
+        return os.path.abspath(name)
+    cand = os.path.join(MODELS_DIR, name)
+    if os.path.exists(cand):
+        return os.path.abspath(cand)
+    return name
+
+def get_running_pid():
+    if os.path.exists(PID_FILE):
+        try:
+            with open(PID_FILE, 'r') as f:
+                pid = int(f.read().strip())
+            os.kill(pid, 0)
+            return pid
+        except Exception:
+            try:
+                os.remove(PID_FILE)
+            except Exception:
+                pass
+    return None
+
+def cmd_status():
+    pid = get_running_pid()
+    if pid:
+        print(f"✅ Colibrì server is RUNNING (PID: {pid}) on http://127.0.0.1:{PORT}")
+        try:
+            req = urllib.request.Request(f"http://127.0.0.1:{PORT}/v1/models")
+            with urllib.request.urlopen(req, timeout=1.0) as resp:
+                data = json.loads(resp.read().decode())
+                models = [m.get('id') for m in data.get('data', [])]
+                print(f"   Active Models: {', '.join(models)}")
+        except Exception as e:
+            print(f"   API check: waiting/initializing ({e})")
+    else:
+        print("⚪ Colibrì server is STOPPED.")
+
+def cmd_stop():
+    pid = get_running_pid()
+    if pid:
+        print(f"Stopping Colibrì server (PID: {pid})...")
+        try:
+            os.kill(pid, 15)
+            time.sleep(1)
+            try:
+                os.kill(pid, 0)
+                os.kill(pid, 9)
+            except Exception:
+                pass
+        except Exception as e:
+            print(f"Error stopping process: {e}")
+        if os.path.exists(PID_FILE):
+            os.remove(PID_FILE)
+        print("✅ Colibrì server stopped.")
+    else:
+        print("Colibrì server is not running.")
+
+def cmd_start(model_arg, open_web=False):
+    if get_running_pid():
+        print("Colibrì server is already running. Stopping it first...")
+        cmd_stop()
+
+    model_path = resolve_model_path(model_arg)
+    if not os.path.exists(model_path):
+        print(f"❌ Error: Model directory not found at: {model_path}")
+        print(f"   Make sure to download or convert the model first into {MODELS_DIR}/")
+        sys.exit(1)
+
+    print(f"🚀 Starting Colibrì Metal Server for: {model_path}")
+    print(f"   Logs: {LOG_FILE}")
+    print(f"   Endpoint: http://127.0.0.1:{PORT}/v1")
+
+    cmd = [
+        PYTHON,
+        os.path.join(COLIBRI_DIR, "coli"),
+        "serve",
+        "--model", model_path,
+        "--gpu", "auto"
+    ]
+
+    with open(LOG_FILE, "wb") as log_f:
+        proc = subprocess.Popen(cmd, cwd=COLIBRI_DIR, stdout=log_f, stderr=subprocess.STDOUT)
+    
+    with open(PID_FILE, "w") as pf:
+        pf.write(str(proc.pid))
+    
+    print(f"✅ Colibrì background process launched (PID: {proc.pid}).")
+    print("   Waiting for readiness...")
+
+    ready = False
+    for _ in range(15):
+        time.sleep(1)
+        try:
+            req = urllib.request.Request(f"http://127.0.0.1:{PORT}/v1/models")
+            with urllib.request.urlopen(req, timeout=0.5) as r:
+                if r.status == 200:
+                    ready = True
+                    break
+        except Exception:
+            pass
+
+    if ready:
+        print(f"🎉 Colibrì is ONLINE on http://127.0.0.1:{PORT}/v1")
+        if open_web:
+            dashboard_url = f"http://127.0.0.1:{PORT}/dashboard"
+            print(f"🌐 Opening 3D Expert Cortex Dashboard: {dashboard_url}")
+            subprocess.run(["open", dashboard_url])
+    else:
+        print("⏳ Server is initializing model weights from SSD. Check ~/.ollama/colibri_server.log for progress.")
+
+def cmd_plan(model_arg):
+    model_path = resolve_model_path(model_arg)
+    cmd = [PYTHON, os.path.join(COLIBRI_DIR, "coli"), "plan", "--model", model_path]
+    subprocess.run(cmd, cwd=COLIBRI_DIR)
+
+def cmd_doctor(model_arg=None):
+    cmd = [PYTHON, os.path.join(COLIBRI_DIR, "coli"), "doctor"]
+    if model_arg:
+        cmd.extend(["--model", resolve_model_path(model_arg)])
+    subprocess.run(cmd, cwd=COLIBRI_DIR)
+
+def cmd_list():
+    print(f"📂 Available Colibrì model containers in {MODELS_DIR}:")
+    items = [d for d in os.listdir(MODELS_DIR) if os.path.isdir(os.path.join(MODELS_DIR, d))]
+    if items:
+        for it in items:
+            size_bytes = sum(os.path.getsize(os.path.join(dirpath, filename))
+                             for dirpath, _, filenames in os.walk(os.path.join(MODELS_DIR, it))
+                             for filename in filenames)
+            print(f" - {it} ({size_bytes / (1024**3):.2f} GB)")
+    else:
+        print(" (No model containers found yet. Place downloaded Colibri INT4 safetensors here)")
+
+def main():
+    if len(sys.argv) < 2:
+        print_help()
+        sys.exit(0)
+
+    action = sys.argv[1].lower()
+    if action in ("-h", "--help", "help"):
+        print_help()
+    elif action == "status":
+        cmd_status()
+    elif action == "stop":
+        cmd_stop()
+    elif action == "list":
+        cmd_list()
+    elif action == "start":
+        if len(sys.argv) < 3:
+            print("Usage: colibri-manager start <model_path_or_name>")
+            sys.exit(1)
+        cmd_start(sys.argv[2], open_web=False)
+    elif action == "web":
+        if len(sys.argv) < 3:
+            print("Usage: colibri-manager web <model_path_or_name>")
+            sys.exit(1)
+        cmd_start(sys.argv[2], open_web=True)
+    elif action == "plan":
+        if len(sys.argv) < 3:
+            print("Usage: colibri-manager plan <model_path_or_name>")
+            sys.exit(1)
+        cmd_plan(sys.argv[2])
+    elif action == "doctor":
+        model_arg = sys.argv[2] if len(sys.argv) > 2 else None
+        cmd_doctor(model_arg)
+    else:
+        print(f"Unknown action: {action}")
+        print_help()
+
+if __name__ == "__main__":
+    main()
