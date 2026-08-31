@@ -1,5 +1,5 @@
 {
-  "numStartups": 4,
+  "numStartups": 5,
   "tipsHistory": {
     "atomic-setup-local": 1,
     "new-user-warmup": 1,
@@ -18,7 +18,8 @@
     "double-esc-code-restore": 2,
     "continue": 2,
     "shift-tab": 3,
-    "image-paste": 3
+    "image-paste": 3,
+    "color-when-multi-clauding": 5
   },
   "promptQueueUseCount": 3,
   "providerProfiles": [
