@@ -36,7 +36,7 @@
 		<string>--load-mode</string>
 		<string>mmap</string>
 		<string>--reasoning-format</string>
-		<string>deepseek</string>
+		<string>none</string>
 		<string>--chat-template-file</string>
 		<string>/Users/d/models/ornith-1.5-35b-uncensored/chatml-permissive.jinja</string>
 		<string>-np</string>
