@@ -4,20 +4,45 @@ import urllib.request
 import json, os, re, sqlite3
 
 PORT = 10101
-TARGET_URL = "http://127.0.0.1:11434"
+COLIBRI_URL = "http://127.0.0.1:8080"
+LLAMA_SPEC_URL = "http://127.0.0.1:11435"
+OLLAMA_URL = "http://127.0.0.1:11434"
+
 import sys
 sys.path.insert(0, os.path.expanduser("~/.agents"))
 import rag_context_store as rag_store
 
-def get_target_url():
+COLIBRI_MODELS = {
+    "glm-5.2", "glm-5.2-colibri", "glm52",
+    "glm-5.3", "glm-5.3-flash", "glm-5.3-flash-colibri", "glm53",
+    "deepseek-v4", "deepseek-v4-colibri", "deepseek_v4", "deepseek-v4-flash",
+    "kimi-k3", "kimi-k3-colibri", "kimi",
+    "inkling", "inkling-colibri",
+    "olmoe-colibri", "qwen38-colibri", "qwen36-colibri"
+}
+
+def is_colibri_model(model_name):
+    if not model_name:
+        return False
+    m = model_name.lower().strip()
+    if m.startswith("colibri") or m.endswith("colibri") or "colibri" in m:
+        return True
+    for c in COLIBRI_MODELS:
+        if c in m:
+            return True
+    return False
+
+def get_target_url(model_name=None):
+    if model_name and is_colibri_model(model_name):
+        return COLIBRI_URL
     try:
-        req = urllib.request.Request("http://127.0.0.1:11435/health", method='GET')
+        req = urllib.request.Request(f"{LLAMA_SPEC_URL}/health", method='GET')
         with urllib.request.urlopen(req, timeout=0.3) as r:
             if r.status == 200:
-                return "http://127.0.0.1:11435"
+                return LLAMA_SPEC_URL
     except Exception:
         pass
-    return "http://127.0.0.1:11434"
+    return OLLAMA_URL
 
 def get_rag_context(query, session_id=None):
     try:
@@ -148,6 +173,46 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             }).encode('utf-8'))
             return
 
+        if self.path == '/v1/models':
+            models = []
+            # 1. Fetch from local In-Memory engines (Ollama / llama-server)
+            try:
+                backend = get_target_url()
+                req = urllib.request.Request(f"{backend}/v1/models")
+                with urllib.request.urlopen(req, timeout=0.5) as resp:
+                    d = json.loads(resp.read().decode())
+                    models.extend(d.get('data', []))
+            except Exception:
+                pass
+
+            # 2. Fetch from Colibri engine (port 8080) if running
+            try:
+                req = urllib.request.Request(f"{COLIBRI_URL}/v1/models")
+                with urllib.request.urlopen(req, timeout=0.3) as resp:
+                    d = json.loads(resp.read().decode())
+                    models.extend(d.get('data', []))
+            except Exception:
+                pass
+
+            # If backends are idle, supply standard catalog
+            if not models:
+                models = [
+                    {"id": "ornith-1.5-35b-uncensored", "object": "model", "owned_by": "local-moe"},
+                    {"id": "qwen3.8-27b-uncensored", "object": "model", "owned_by": "local-moe"},
+                    {"id": "glm-5.2-colibri", "object": "model", "owned_by": "colibri-frontier"},
+                    {"id": "glm-5.3-flash-colibri", "object": "model", "owned_by": "colibri-frontier"},
+                    {"id": "deepseek-v4-colibri", "object": "model", "owned_by": "colibri-frontier"}
+                ]
+
+            out = json.dumps({"object": "list", "data": models}).encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(out)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(out)
+            return
+
         req = urllib.request.Request(f"{get_target_url()}{self.path}")
         try:
             with urllib.request.urlopen(req) as resp:
@@ -253,8 +318,9 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         except Exception:
             pass
 
+        target_backend = get_target_url(data.get('model')) if isinstance(data, dict) else get_target_url()
         req = urllib.request.Request(
-            f"{get_target_url()}{self.path}",
+            f"{target_backend}{self.path}",
             data=body,
             headers={"Content-Type": "application/json"}
         )
