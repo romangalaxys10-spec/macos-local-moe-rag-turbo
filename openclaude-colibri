@@ -1,0 +1,4 @@
+#!/bin/bash
+MODEL="${1:-glm-5.2-colibri}"
+shift 2>/dev/null || true
+OPENAI_BASE_URL="http://127.0.0.1:10101/v1" OPENAI_API_KEY="local-gateway" OPENAI_MODEL="$MODEL" exec /Users/d/.local/node-v22/bin/openclaude "$@"
