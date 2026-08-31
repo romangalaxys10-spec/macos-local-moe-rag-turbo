@@ -1,0 +1,5 @@
+#!/bin/bash
+export OPENAI_BASE_URL="http://127.0.0.1:10101/v1"
+export OPENAI_MODEL="qwen2.5-coder-32b-uncensored"
+export OPENAI_API_KEY="local-gateway"
+exec /Users/d/.local/bin/openclaude --settings ~/.openclaude/settings.qwen25-coder.json "$@"
