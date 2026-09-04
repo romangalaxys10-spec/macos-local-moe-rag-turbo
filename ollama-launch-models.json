@@ -47,7 +47,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     },
     {
       "slug": "qwen2.5-coder-32b-uncensored",
@@ -96,7 +96,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     },
     {
       "slug": "ornith-1.5-35b-uncensored",
@@ -145,7 +145,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     },
     {
       "slug": "qwen3.8-27b-uncensored",
@@ -194,7 +194,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     },
     {
       "slug": "glm-5.2-colibri",
@@ -243,7 +243,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     },
     {
       "slug": "glm-5.3-flash-colibri",
@@ -292,7 +292,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     },
     {
       "slug": "deepseek-v4-colibri",
@@ -341,7 +341,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     },
     {
       "slug": "kimi-k3-colibri",
@@ -390,7 +390,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     },
     {
       "slug": "qwen38-colibri",
@@ -439,7 +439,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     },
     {
       "slug": "qwen36-colibri",
@@ -488,7 +488,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     },
     {
       "slug": "olmoe-colibri",
@@ -537,7 +537,7 @@
       "model_specialty": null,
       "tool_mode": "direct",
       "multi_agent_version": "v2",
-      "base_instructions": "You are Codex, an expert coding agent."
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
     }
   ]
 }
