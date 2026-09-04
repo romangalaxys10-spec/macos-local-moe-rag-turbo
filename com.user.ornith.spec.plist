@@ -10,7 +10,7 @@
 	<array>
 		<string>/Users/d/models/llama-b10585/llama-server</string>
 		<string>-m</string>
-		<string>/Users/d/models/ornith-1.5-35b-uncensored/Ornith-1.5-35B-A3B-CRACK-Q3_K_M.gguf</string>
+		<string>/Users/d/models/colibri/ornith-1.5-35b-uncensored/Ornith-1.5-35B-A3B-CRACK-Q3_K_M.gguf</string>
 		<string>--alias</string>
 		<string>ornith-1.5-35b-uncensored,ornith-1.5:9b,ornith-1.5-35b-a3b:latest,qwen3.6:35b-a3b</string>
 		<string>--host</string>
@@ -38,7 +38,7 @@
 		<string>--reasoning-format</string>
 		<string>none</string>
 		<string>--chat-template-file</string>
-		<string>/Users/d/models/ornith-1.5-35b-uncensored/chatml-permissive.jinja</string>
+		<string>/Users/d/models/colibri/ornith-1.5-35b-uncensored/chatml-permissive.jinja</string>
 		<string>-np</string>
 		<string>1</string>
 		<string>--repeat-penalty</string>
