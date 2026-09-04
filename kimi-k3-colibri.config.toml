@@ -1,5 +1,7 @@
 model = "kimi-k3-colibri"
 model_provider = "ollama-local"
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
 
 [model_providers.ollama-local]
 name = "Kimi K3 (2.8T Colibrì MoE)"
