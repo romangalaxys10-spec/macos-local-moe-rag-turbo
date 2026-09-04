@@ -248,7 +248,18 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
         if isinstance(data, dict):
             try:
                 if 'input' in data and isinstance(data['input'], list):
-                    sys_prompt = "You are a helpful coding assistant."
+                    client_sys = ""
+                    for item in data['input']:
+                        if isinstance(item, dict) and item.get('role') in ('developer', 'system'):
+                            c = item.get('content')
+                            if isinstance(c, str):
+                                client_sys += "\n\n" + c
+                            elif isinstance(c, list):
+                                for b in c:
+                                    if isinstance(b, dict) and b.get('type') == 'input_text':
+                                        client_sys += "\n\n" + b.get('text', '')
+
+                    sys_prompt = client_sys.strip() if client_sys.strip() else "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon). Execute terminal commands, modify files, build projects, and verify your work."
                     for item in reversed(data['input']):
                         if isinstance(item, dict) and item.get('role') == 'user':
                             c = item.get('content')
