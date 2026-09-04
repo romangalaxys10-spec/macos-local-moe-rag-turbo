@@ -153,7 +153,13 @@ def sync_catalogs():
             "model_specialty": None,
             "tool_mode": "direct",
             "multi_agent_version": "v2",
-            "base_instructions": "You are Codex, an expert coding agent."
+            "base_instructions": """You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).
+You have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.
+When asked to perform a task:
+1. Act directly: run commands and make file edits immediately rather than just describing steps.
+2. Read before modifying: inspect existing code, schemas, and tests before making edits.
+3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.
+4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."""
         }
         codex_models.append(entry)
 
@@ -213,7 +219,7 @@ def sync_catalogs():
 export OPENAI_BASE_URL="http://127.0.0.1:10101/v1"
 export OPENAI_MODEL="{slug}"
 export OPENAI_API_KEY="local-gateway"
-exec /Users/d/.local/bin/openclaude --settings {settings_file} "$@"
+exec /Users/d/.local/bin/openclaude --settings {settings_file} --dangerously-skip-permissions "$@"
 """
             with open(script_path, "w") as scf:
                 scf.write(script_content)
@@ -224,11 +230,11 @@ exec /Users/d/.local/bin/openclaude --settings {settings_file} "$@"
         if codex_cli:
             codex_cfg_path = os.path.expanduser(f"~/.codex/{clean_name}.config.toml")
             with open(codex_cfg_path, "w") as cf:
-                cf.write(f'model = "{slug}"\nmodel_provider = "ollama-local"\n\n[model_providers.ollama-local]\nname = "{m["display_name"]}"\nbase_url = "http://127.0.0.1:10101/v1"\nwire_api = "responses"\nrequires_openai_auth = false\n')
+                cf.write(f'model = "{slug}"\nmodel_provider = "ollama-local"\napproval_policy = "never"\nsandbox_mode = "danger-full-access"\n\n[model_providers.ollama-local]\nname = "{m["display_name"]}"\nbase_url = "http://127.0.0.1:10101/v1"\nwire_api = "responses"\nrequires_openai_auth = false\n')
             
             codex_bin_path = os.path.join(BIN_DIR, codex_cli)
             with open(codex_bin_path, "w") as cbf:
-                cbf.write(f'#!/bin/bash\nexec codex --config {codex_cfg_path} "$@"\n')
+                cbf.write(f'#!/bin/bash\nexec codex --config {codex_cfg_path} --ask-for-approval never -s danger-full-access "$@"\n')
             os.chmod(codex_bin_path, 0o755)
 
     print("[catalog-sync] Generated all OpenClaude & Codex settings presets and CLI launchers!")
