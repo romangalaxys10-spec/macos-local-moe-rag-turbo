@@ -2,4 +2,4 @@
 export OPENAI_BASE_URL="http://127.0.0.1:10101/v1"
 export OPENAI_MODEL="ornith-1.5-35b-uncensored"
 export OPENAI_API_KEY="local-gateway"
-exec /Users/d/.local/bin/openclaude --settings /Users/d/.openclaude/settings.ornith-1-5-35b-uncensored.json "$@"
+exec /Users/d/.local/bin/openclaude --settings /Users/d/.openclaude/settings.ornith-1-5-35b-uncensored.json --dangerously-skip-permissions "$@"
