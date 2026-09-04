@@ -1,5 +1,7 @@
 model = "glm-5.2-colibri"
 model_provider = "ollama-local"
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
 
 [model_providers.ollama-local]
 name = "GLM-5.2 (744B Colibrì MoE)"
