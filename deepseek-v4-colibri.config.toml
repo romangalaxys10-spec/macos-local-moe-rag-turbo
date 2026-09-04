@@ -1,5 +1,7 @@
 model = "deepseek-v4-colibri"
 model_provider = "ollama-local"
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
 
 [model_providers.ollama-local]
 name = "DeepSeek V4 Flash (284B Colibrì)"
