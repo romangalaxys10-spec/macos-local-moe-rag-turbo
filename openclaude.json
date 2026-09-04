@@ -1,5 +1,5 @@
 {
-  "numStartups": 5,
+  "numStartups": 6,
   "tipsHistory": {
     "atomic-setup-local": 1,
     "new-user-warmup": 1,
@@ -19,10 +19,20 @@
     "continue": 2,
     "shift-tab": 3,
     "image-paste": 3,
-    "color-when-multi-clauding": 5
+    "color-when-multi-clauding": 5,
+    "shift-enter": 6,
+    "custom-agents": 6
   },
   "promptQueueUseCount": 3,
   "providerProfiles": [
+    {
+      "id": "provider_qwen2_5_coder_7b_instruct",
+      "name": "Qwen 2.5 Coder 7B (Lightweight Turbo)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "qwen2.5-coder-7b-instruct",
+      "apiKey": "local-gateway"
+    },
     {
       "id": "provider_qwen2_5_coder_32b_uncensored",
       "name": "Qwen 2.5 Coder 32B Uncensored",
@@ -118,6 +128,13 @@
         "label": "glm-5.3-flash-colibri",
         "description": "Provider: Colibr\u00ec GLM-5.3-Flash (321B MoE)"
       }
+    ],
+    "provider_qwen3_8_27b_iq1": [
+      {
+        "value": "qwen3.8-27b-iq1",
+        "label": "qwen3.8-27b-iq1",
+        "description": "Provider: Qwen 3.8 27B IQ1 (6.7G Metal)"
+      }
     ]
   },
   "firstStartTime": "2026-08-31T12:01:23.345Z",
@@ -125,12 +142,12 @@
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 11,
   "changelogLastFetched": 1788177684337,
-  "activeProviderProfileId": "provider_colibri_glm53",
+  "activeProviderProfileId": "provider_qwen3_8_27b_iq1",
   "openaiAdditionalModelOptionsCache": [
     {
-      "value": "glm-5.3-flash-colibri",
-      "label": "glm-5.3-flash-colibri",
-      "description": "Provider: Colibr\u00ec GLM-5.3-Flash (321B MoE)"
+      "value": "qwen3.8-27b-iq1",
+      "label": "qwen3.8-27b-iq1",
+      "description": "Provider: Qwen 3.8 27B IQ1 (6.7G Metal)"
     }
   ],
   "appleTerminalSetupInProgress": false,
@@ -151,10 +168,10 @@
       "hasClaudeMdExternalIncludesWarningShownForUser": false,
       "hasCompletedProjectOnboarding": true,
       "lastCost": 0,
-      "lastAPIDuration": 5447,
-      "lastAPIDurationWithoutRetries": 5445,
+      "lastAPIDuration": 0,
+      "lastAPIDurationWithoutRetries": 0,
       "lastToolDuration": 0,
-      "lastDuration": 51031,
+      "lastDuration": 818386,
       "lastLinesAdded": 0,
       "lastLinesRemoved": 0,
       "lastTotalInputTokens": 0,
@@ -162,27 +179,18 @@
       "lastTotalCacheCreationInputTokens": 0,
       "lastTotalCacheReadInputTokens": 0,
       "lastTotalWebSearchRequests": 0,
-      "lastFpsAverage": 12.76,
-      "lastFpsLow1Pct": 186.03,
-      "lastModelUsage": {
-        "qwen2.5-coder-32b-uncensored": {
-          "inputTokens": 0,
-          "outputTokens": 0,
-          "cacheReadInputTokens": 0,
-          "cacheCreationInputTokens": 0,
-          "webSearchRequests": 0,
-          "costUSD": 0
-        }
-      },
-      "lastSessionId": "f1ff9fa0-9d38-4029-a495-4df71dd27083",
+      "lastFpsAverage": 3.71,
+      "lastFpsLow1Pct": 296.31,
+      "lastModelUsage": {},
+      "lastSessionId": "88157b25-55ee-42f5-bbf0-eb51a47a2539",
       "lastSessionMetrics": {
-        "frame_duration_ms_count": 645,
-        "frame_duration_ms_min": 0.05887500000244472,
-        "frame_duration_ms_max": 7.5555420000000595,
-        "frame_duration_ms_avg": 1.1840159596899256,
-        "frame_duration_ms_p50": 0.6849590000001626,
-        "frame_duration_ms_p95": 3.2827243999960047,
-        "frame_duration_ms_p99": 5.292989480001442
+        "frame_duration_ms_count": 3029,
+        "frame_duration_ms_min": 0.041124999999738066,
+        "frame_duration_ms_max": 8.725459000001138,
+        "frame_duration_ms_avg": 0.8452446242986075,
+        "frame_duration_ms_p50": 0.6472494999907212,
+        "frame_duration_ms_p95": 2.0591356499979145,
+        "frame_duration_ms_p99": 3.3334714100051466
       }
     }
   },
@@ -197,8 +205,28 @@
   "officialMarketplaceAutoInstalled": true,
   "additionalModelOptionsCache": [
     {
-      "value": "ornith-1.5-35b-a3b:latest",
-      "label": "ornith-1.5-35b-a3b:latest",
+      "value": "ornith-1.5-35b-uncensored",
+      "label": "ornith-1.5-35b-uncensored",
+      "description": "Discovered from OpenAI-compatible endpoint"
+    },
+    {
+      "value": "qwen3.8-27b-uncensored",
+      "label": "qwen3.8-27b-uncensored",
+      "description": "Discovered from OpenAI-compatible endpoint"
+    },
+    {
+      "value": "glm-5.2-colibri",
+      "label": "glm-5.2-colibri",
+      "description": "Discovered from OpenAI-compatible endpoint"
+    },
+    {
+      "value": "glm-5.3-flash-colibri",
+      "label": "glm-5.3-flash-colibri",
+      "description": "Discovered from OpenAI-compatible endpoint"
+    },
+    {
+      "value": "deepseek-v4-colibri",
+      "label": "deepseek-v4-colibri",
       "description": "Discovered from OpenAI-compatible endpoint"
     }
   ],
