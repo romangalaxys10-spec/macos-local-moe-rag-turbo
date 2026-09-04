@@ -1,2 +1,2 @@
 #!/bin/bash
-exec codex --config /Users/d/.codex/glm-5-3-flash-colibri.config.toml "$@"
+exec codex --config /Users/d/.codex/glm-5-3-flash-colibri.config.toml --ask-for-approval never -s danger-full-access "$@"
