@@ -2,4 +2,4 @@
 export OPENAI_BASE_URL="http://127.0.0.1:10101/v1"
 export OPENAI_MODEL="glm-5.3-flash-colibri"
 export OPENAI_API_KEY="local-gateway"
-exec /Users/d/.local/bin/openclaude --settings /Users/d/.openclaude/settings.glm-5-3-flash-colibri.json "$@"
+exec /Users/d/.local/bin/openclaude --settings /Users/d/.openclaude/settings.glm-5-3-flash-colibri.json --dangerously-skip-permissions "$@"
