@@ -12,6 +12,10 @@ import sys
 sys.path.insert(0, os.path.expanduser("~/.agents"))
 import rag_context_store as rag_store
 
+# Ensure proxy never routes internal loopback calls through sing-box or external proxy
+opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+urllib.request.install_opener(opener)
+
 COLIBRI_MODELS = {
     "glm-5.2", "glm-5.2-colibri", "glm52",
     "glm-5.3", "glm-5.3-flash", "glm-5.3-flash-colibri", "glm53",
@@ -145,7 +149,11 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                     self.send_header(k, v)
                 self.end_headers()
         except Exception as e:
-            self.send_error(500, str(e))
+            import traceback
+            tb = traceback.format_exc()
+            with open('/tmp/proxy_last_err.log', 'w') as ef:
+                ef.write(tb)
+            self.send_error(502, f"Proxy error: {str(e)}\n{tb}")
 
     def do_GET(self):
         if self.path in ('/', ''):
@@ -232,11 +240,25 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(resp.read())
         except Exception as e:
-            self.send_error(500, str(e))
+            import traceback
+            tb = traceback.format_exc()
+            with open('/tmp/proxy_last_err.log', 'w') as ef:
+                ef.write(tb)
+            self.send_error(502, f"Proxy error: {str(e)}\n{tb}")
 
     def do_POST(self):
         length = int(self.headers.get('Content-Length', 0))
+        raw = self.rfile.read(length)
+        with open('/tmp/codex_incoming_request.json', 'wb') as cf:
+            cf.write(raw)
+        import io
+        self.rfile = io.BytesIO(raw)
+        with open('/tmp/proxy_post_hit.log', 'a') as hit_f:
+            hit_f.write(f"POST {self.path}\n")
+        length = int(self.headers.get('Content-Length', 0))
         body = self.rfile.read(length)
+        with open('/tmp/last_raw_request.json', 'wb') as rf:
+            rf.write(body)
         data = None
         user_text = ""
 
@@ -438,7 +460,11 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                     self.wfile.flush()
         except Exception as e:
             try:
-                self.send_error(500, str(e))
+                import traceback
+                tb = traceback.format_exc()
+                with open('/tmp/proxy_last_err.log', 'w') as ef:
+                    ef.write(tb)
+                self.send_error(502, f"Proxy error: {str(e)}\n{tb}")
             except Exception:
                 pass
 
