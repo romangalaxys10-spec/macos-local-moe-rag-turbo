@@ -205,29 +205,9 @@
   "officialMarketplaceAutoInstalled": true,
   "additionalModelOptionsCache": [
     {
-      "value": "ornith-1.5-35b-uncensored",
-      "label": "ornith-1.5-35b-uncensored",
-      "description": "Discovered from OpenAI-compatible endpoint"
-    },
-    {
-      "value": "qwen3.8-27b-uncensored",
-      "label": "qwen3.8-27b-uncensored",
-      "description": "Discovered from OpenAI-compatible endpoint"
-    },
-    {
-      "value": "glm-5.2-colibri",
-      "label": "glm-5.2-colibri",
-      "description": "Discovered from OpenAI-compatible endpoint"
-    },
-    {
-      "value": "glm-5.3-flash-colibri",
-      "label": "glm-5.3-flash-colibri",
-      "description": "Discovered from OpenAI-compatible endpoint"
-    },
-    {
-      "value": "deepseek-v4-colibri",
-      "label": "deepseek-v4-colibri",
-      "description": "Discovered from OpenAI-compatible endpoint"
+      "value": "qwen2.5-coder-7b-instruct",
+      "label": "qwen2.5-coder-7b-instruct",
+      "description": "Detected from Local OpenAI-compatible"
     }
   ],
   "additionalModelOptionsCacheScope": "openai:http://127.0.0.1:10101/v1:7ddeb5300db1d137",
