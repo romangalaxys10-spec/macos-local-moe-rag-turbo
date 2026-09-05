@@ -161,7 +161,8 @@ When asked to perform a task:
 3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.
 4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."""
         }
-        codex_models.append(entry)
+        clean_entry = {k: v for k, v in entry.items() if v is not None}
+        codex_models.append(clean_entry)
 
     with open(CODEX_PATH, "w") as f:
         json.dump({"models": codex_models}, f, indent=2)
