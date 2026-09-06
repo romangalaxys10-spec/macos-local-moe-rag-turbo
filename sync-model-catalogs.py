@@ -14,6 +14,15 @@ os.makedirs(STAGING_DIR, exist_ok=True)
 
 ALL_MODELS = [
     {
+        "slug": "qwen2.5-coder-14b-instruct",
+        "display_name": "Qwen 2.5 Coder 14B (Smarter Agent)",
+        "description": "14.7B dense coding model, 8.4GB RAM footprint, high-accuracy tool use, 16k context",
+        "context_window": 32768,
+        "cli_name": "openclaude-coder14b",
+        "codex_cli": "codex-coder14b"
+    },
+
+    {
         "slug": "qwen2.5-coder-7b-instruct",
         "display_name": "Qwen 2.5 Coder 7B (Lightweight Turbo)",
         "description": "7.6B dense coding model, ~4.4GB RAM footprint, 80+ t/s, 16k context",
