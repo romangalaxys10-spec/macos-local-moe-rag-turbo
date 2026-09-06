@@ -26,6 +26,14 @@
   "promptQueueUseCount": 3,
   "providerProfiles": [
     {
+      "id": "provider_qwen2_5_coder_14b_instruct",
+      "name": "Qwen 2.5 Coder 14B (Smarter Agent)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "qwen2.5-coder-14b-instruct",
+      "apiKey": "local-gateway"
+    },
+    {
       "id": "provider_qwen2_5_coder_7b_instruct",
       "name": "Qwen 2.5 Coder 7B (Lightweight Turbo)",
       "provider": "openai",
