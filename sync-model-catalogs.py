@@ -14,6 +14,22 @@ os.makedirs(STAGING_DIR, exist_ok=True)
 
 ALL_MODELS = [
     {
+        "slug": "deepseek-coder-v2-lite-instruct",
+        "display_name": "DeepSeek Coder V2 Lite (16B MoE - 2.4B Active)",
+        "description": "16B MoE coding model (2.4B active), ~7.5GB RAM footprint, 80+ t/s, 32k context",
+        "context_window": 32768,
+        "cli_name": "openclaude-deepseek-lite",
+        "codex_cli": "codex-deepseek-lite"
+    },
+    {
+        "slug": "qwen3-coder-30b-a3b-instruct",
+        "display_name": "Qwen 3 Coder 30B (A3B MoE - 3B Active)",
+        "description": "30B next-gen MoE coding model (3B active), ~12.4GB RAM footprint, 70+ t/s, 32k context",
+        "context_window": 32768,
+        "cli_name": "openclaude-qwen3-coder",
+        "codex_cli": "codex-qwen3-coder"
+    },
+    {
         "slug": "qwen2.5-coder-14b-instruct",
         "display_name": "Qwen 2.5 Coder 14B (Smarter Agent)",
         "description": "14.7B dense coding model, 8.4GB RAM footprint, high-accuracy tool use, 16k context",
