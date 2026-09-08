@@ -26,6 +26,22 @@
   "promptQueueUseCount": 3,
   "providerProfiles": [
     {
+      "id": "provider_deepseek_coder_v2_lite_instruct",
+      "name": "DeepSeek Coder V2 Lite (16B MoE - 2.4B Active)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "deepseek-coder-v2-lite-instruct",
+      "apiKey": "local-gateway"
+    },
+    {
+      "id": "provider_qwen3_coder_30b_a3b_instruct",
+      "name": "Qwen 3 Coder 30B (A3B MoE - 3B Active)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "qwen3-coder-30b-a3b-instruct",
+      "apiKey": "local-gateway"
+    },
+    {
       "id": "provider_qwen2_5_coder_14b_instruct",
       "name": "Qwen 2.5 Coder 14B (Smarter Agent)",
       "provider": "openai",
