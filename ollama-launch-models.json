@@ -1,6 +1,80 @@
 {
   "models": [
     {
+      "slug": "deepseek-coder-v2-lite-instruct",
+      "display_name": "DeepSeek Coder V2 Lite (16B MoE - 2.4B Active)",
+      "description": "16B MoE coding model (2.4B active), ~7.5GB RAM footprint, 80+ t/s, 32k context",
+      "supported_reasoning_levels": [],
+      "shell_type": "default",
+      "visibility": "list",
+      "supported_in_api": true,
+      "priority": 0,
+      "additional_speed_tiers": [],
+      "service_tiers": [],
+      "include_skills_usage_instructions": true,
+      "include_plugin_usage_instructions": true,
+      "include_apps_usage_instructions": true,
+      "supports_reasoning_summary_parameter": true,
+      "default_reasoning_summary": "auto",
+      "support_verbosity": false,
+      "truncation_policy": {
+        "mode": "tokens",
+        "limit": 10000
+      },
+      "supports_image_detail_original": false,
+      "context_window": 32768,
+      "max_context_window": 32768,
+      "effective_context_window_percent": 95,
+      "experimental_supported_tools": [],
+      "input_modalities": [
+        "text"
+      ],
+      "supports_search_tool": false,
+      "use_responses_lite": false,
+      "node_repl_auto_review_required": false,
+      "node_repl_disabled": true,
+      "tool_mode": "direct",
+      "multi_agent_version": "v2",
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
+    },
+    {
+      "slug": "qwen3-coder-30b-a3b-instruct",
+      "display_name": "Qwen 3 Coder 30B (A3B MoE - 3B Active)",
+      "description": "30B next-gen MoE coding model (3B active), ~12.4GB RAM footprint, 70+ t/s, 32k context",
+      "supported_reasoning_levels": [],
+      "shell_type": "default",
+      "visibility": "list",
+      "supported_in_api": true,
+      "priority": 0,
+      "additional_speed_tiers": [],
+      "service_tiers": [],
+      "include_skills_usage_instructions": true,
+      "include_plugin_usage_instructions": true,
+      "include_apps_usage_instructions": true,
+      "supports_reasoning_summary_parameter": true,
+      "default_reasoning_summary": "auto",
+      "support_verbosity": false,
+      "truncation_policy": {
+        "mode": "tokens",
+        "limit": 10000
+      },
+      "supports_image_detail_original": false,
+      "context_window": 32768,
+      "max_context_window": 32768,
+      "effective_context_window_percent": 95,
+      "experimental_supported_tools": [],
+      "input_modalities": [
+        "text"
+      ],
+      "supports_search_tool": false,
+      "use_responses_lite": false,
+      "node_repl_auto_review_required": false,
+      "node_repl_disabled": true,
+      "tool_mode": "direct",
+      "multi_agent_version": "v2",
+      "base_instructions": "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon).\nYou have full authority to directly execute terminal commands, modify files, install tools, build projects, and debug errors.\nWhen asked to perform a task:\n1. Act directly: run commands and make file edits immediately rather than just describing steps.\n2. Read before modifying: inspect existing code, schemas, and tests before making edits.\n3. Test and verify: run the build, test, or execution command to ensure everything works end-to-end.\n4. If an error occurs, read the diagnostic output, fix the root cause, and re-test until it succeeds."
+    },
+    {
       "slug": "qwen2.5-coder-14b-instruct",
       "display_name": "Qwen 2.5 Coder 14B (Smarter Agent)",
       "description": "14.7B dense coding model, 8.4GB RAM footprint, high-accuracy tool use, 16k context",
