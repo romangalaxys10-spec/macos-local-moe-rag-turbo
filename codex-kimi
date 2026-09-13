@@ -1,2 +1,2 @@
 #!/bin/bash
-exec codex --config /Users/d/.codex/kimi-k3-colibri.config.toml --ask-for-approval never -s danger-full-access "$@"
+exec codex --profile kimi-k3-colibri --ask-for-approval never -s danger-full-access "$@"
