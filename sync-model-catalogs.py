@@ -268,7 +268,7 @@ exec /Users/d/.local/bin/openclaude --settings {settings_file} --dangerously-ski
             
             codex_bin_path = os.path.join(BIN_DIR, codex_cli)
             with open(codex_bin_path, "w") as cbf:
-                cbf.write(f'#!/bin/bash\nexec codex --config {codex_cfg_path} --ask-for-approval never -s danger-full-access "$@"\n')
+                cbf.write(f'#!/bin/bash\nexec codex --profile {clean_name} --ask-for-approval never -s danger-full-access "$@"\n')
             os.chmod(codex_bin_path, 0o755)
 
     print("[catalog-sync] Generated all OpenClaude & Codex settings presets and CLI launchers!")
