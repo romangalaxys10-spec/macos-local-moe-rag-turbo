@@ -14,6 +14,14 @@ os.makedirs(STAGING_DIR, exist_ok=True)
 
 ALL_MODELS = [
     {
+        "slug": "qwen3.8-27b-dflash",
+        "display_name": "Qwen 3.8 27B (DFlash2 Turbo ~100 t/s)",
+        "description": "27B reasoning model accelerated with DFlash2 block diffusion speculative decoding",
+        "context_window": 32768,
+        "cli_name": "openclaude-qwen38-dflash",
+        "codex_cli": "codex-qwen38-dflash"
+    },
+    {
         "slug": "deepseek-coder-v2-lite-instruct",
         "display_name": "DeepSeek Coder V2 Lite (16B MoE - 2.4B Active)",
         "description": "16B MoE coding model (2.4B active), ~7.5GB RAM footprint, 80+ t/s, 32k context",
