@@ -14,54 +14,20 @@ os.makedirs(STAGING_DIR, exist_ok=True)
 
 ALL_MODELS = [
     {
+        "slug": "qwen3.5-9b-instruct",
+        "display_name": "Qwen 3.5 9B (MTP Speculative Turbo)",
+        "description": "9B reasoning & coding model with native Multi-Token Prediction speculative decoding (~85+ t/s, ~5.6GB RAM)",
+        "context_window": 32768,
+        "cli_name": "openclaude-qwen35-9b",
+        "codex_cli": "codex-qwen35-9b"
+    },
+    {
         "slug": "qwen3.8-27b-dflash",
         "display_name": "Qwen 3.8 27B (DFlash2 Turbo ~100 t/s)",
-        "description": "27B reasoning model accelerated with DFlash2 block diffusion speculative decoding",
+        "description": "27B reasoning model accelerated with DFlash2 block diffusion speculative decoding drafter",
         "context_window": 32768,
         "cli_name": "openclaude-qwen38-dflash",
         "codex_cli": "codex-qwen38-dflash"
-    },
-    {
-        "slug": "deepseek-coder-v2-lite-instruct",
-        "display_name": "DeepSeek Coder V2 Lite (16B MoE - 2.4B Active)",
-        "description": "16B MoE coding model (2.4B active), ~7.5GB RAM footprint, 80+ t/s, 32k context",
-        "context_window": 32768,
-        "cli_name": "openclaude-deepseek-lite",
-        "codex_cli": "codex-deepseek-lite"
-    },
-    {
-        "slug": "qwen3-coder-30b-a3b-instruct",
-        "display_name": "Qwen 3 Coder 30B (A3B MoE - 3B Active)",
-        "description": "30B next-gen MoE coding model (3B active), ~12.4GB RAM footprint, 70+ t/s, 32k context",
-        "context_window": 32768,
-        "cli_name": "openclaude-qwen3-coder",
-        "codex_cli": "codex-qwen3-coder"
-    },
-    {
-        "slug": "qwen2.5-coder-14b-instruct",
-        "display_name": "Qwen 2.5 Coder 14B (Smarter Agent)",
-        "description": "14.7B dense coding model, 8.4GB RAM footprint, high-accuracy tool use, 16k context",
-        "context_window": 32768,
-        "cli_name": "openclaude-coder14b",
-        "codex_cli": "codex-coder14b"
-    },
-
-    {
-        "slug": "qwen2.5-coder-7b-instruct",
-        "display_name": "Qwen 2.5 Coder 7B (Lightweight Turbo)",
-        "description": "7.6B dense coding model, ~4.4GB RAM footprint, 80+ t/s, 16k context",
-        "context_window": 32768,
-        "cli_name": "openclaude-coder7b",
-        "codex_cli": "codex-coder7b"
-    },
-
-    {
-        "slug": "qwen2.5-coder-32b-uncensored",
-        "display_name": "Qwen 2.5 Coder 32B Uncensored",
-        "description": "32.5B dense coding model, abliterated uncensored, 16k context on Metal GPU",
-        "context_window": 32768,
-        "cli_name": "openclaude-coder",
-        "codex_cli": "codex-coder"
     },
     {
         "slug": "ornith-1.5-35b-uncensored",
