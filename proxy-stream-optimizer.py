@@ -65,47 +65,61 @@ def get_rag_context(query, session_id=None):
         print(f"RAG error: {e}")
         return ""
 
+def flatten_tools(tools):
+    if not isinstance(tools, list):
+        return tools
+    flat = []
+    for t in tools:
+        if not isinstance(t, dict):
+            continue
+        ttype = t.get('type')
+        if ttype == 'function':
+            flat.append(t)
+        elif ttype == 'namespace' and 'tools' in t and isinstance(t['tools'], list):
+            for sub_t in t['tools']:
+                if isinstance(sub_t, dict) and sub_t.get('type') == 'function':
+                    flat.append(sub_t)
+        elif ttype == 'web_search':
+            pass
+    return flat
+
 def sanitize_tool_calls(data):
     if not isinstance(data, dict):
         return data
     try:
+        def clean_fn(fn):
+            args = fn.get('arguments')
+            if args is None or args == '' or args == 'null':
+                fn['arguments'] = '{}'
+            elif isinstance(args, str):
+                try:
+                    json.loads(args)
+                except Exception:
+                    fn['arguments'] = json.dumps({"command": args}) if args.strip() else "{}"
+            elif isinstance(args, dict):
+                fn['arguments'] = json.dumps(args)
+
         if 'choices' in data and isinstance(data['choices'], list):
             for choice in data['choices']:
                 msg = choice.get('message', {})
                 if 'tool_calls' in msg and isinstance(msg['tool_calls'], list):
                     for tc in msg['tool_calls']:
-                        fn = tc.get('function', {})
-                        args = fn.get('arguments')
-                        if args is None or args == '' or args == 'null':
-                            fn['arguments'] = '{}'
-                        elif isinstance(args, str):
-                            try:
-                                json.loads(args)
-                            except Exception:
-                                fn['arguments'] = json.dumps({"command": args}) if args.strip() else "{}"
-                        elif isinstance(args, dict):
-                            fn['arguments'] = json.dumps(args)
+                        clean_fn(tc.get('function', {}))
                 delta = choice.get('delta', {})
                 if 'tool_calls' in delta and isinstance(delta['tool_calls'], list):
                     for tc in delta['tool_calls']:
-                        fn = tc.get('function', {})
-                        if 'arguments' in fn:
-                            args = fn['arguments']
-                            if args is None or args == 'null':
-                                fn['arguments'] = '{}'
+                        clean_fn(tc.get('function', {}))
         elif 'output' in data and isinstance(data['output'], list):
             for item in data['output']:
                 if item.get('type') == 'function_call':
-                    args = item.get('arguments')
-                    if args is None or args == '' or args == 'null':
-                        item['arguments'] = '{}'
-                    elif isinstance(args, str):
-                        try:
-                            json.loads(args)
-                        except Exception:
-                            item['arguments'] = json.dumps({"command": args}) if args.strip() else "{}"
-                    elif isinstance(args, dict):
-                        item['arguments'] = json.dumps(args)
+                    clean_fn(item)
+        elif 'item' in data and isinstance(data['item'], dict):
+            if data['item'].get('type') == 'function_call':
+                clean_fn(data['item'])
+        elif 'response' in data and isinstance(data['response'], dict):
+            for item in data['response'].get('output', []):
+                if item.get('type') == 'function_call':
+                    clean_fn(item)
     except Exception:
         pass
     return data
@@ -115,6 +129,8 @@ def normalize_conversation_tail(msgs):
     and always finish on a user/tool turn. Merges loop-duplicate assistants away."""
     out = []
     for m in msgs:
+        if not isinstance(m, dict):
+            continue
         r = m.get('role')
         if out and r == 'assistant' and out[-1].get('role') == 'assistant':
             if json.dumps(m.get('content', '')) == json.dumps(out[-1].get('content', '')):
@@ -122,8 +138,12 @@ def normalize_conversation_tail(msgs):
         out.append(m)
     while len(out) >= 2 and out[-1].get('role') == 'assistant' and out[-2].get('role') == 'assistant':
         out.pop(-2)  # keep the newest assistant of any remaining run
-    if out and out[-1].get('role') not in ('user', 'tool'):
-        out.append({"role": "user", "content": "(continue)"})
+    if out:
+        last = out[-1]
+        last_role = last.get('role')
+        last_type = last.get('type')
+        if last_role not in ('user', 'tool') and last_type not in ('function_call_output',):
+            out.append({"type": "message", "role": "user", "content": [{"type": "input_text", "text": "(continue)"}]})
     return out
 
 
@@ -269,8 +289,14 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
 
         if isinstance(data, dict):
             try:
+                if 'tools' in data and isinstance(data['tools'], list):
+                    data['tools'] = flatten_tools(data['tools'])
+
                 if 'input' in data and isinstance(data['input'], list):
                     client_sys = ""
+                    if 'instructions' in data and isinstance(data['instructions'], str):
+                        client_sys += data['instructions'].strip() + "\n\n"
+
                     for item in data['input']:
                         if isinstance(item, dict) and item.get('role') in ('developer', 'system'):
                             c = item.get('content')
@@ -281,7 +307,18 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                     if isinstance(b, dict) and b.get('type') == 'input_text':
                                         client_sys += "\n\n" + b.get('text', '')
 
-                    sys_prompt = client_sys.strip() if client_sys.strip() else "You are an autonomous, expert software engineer and systems assistant on macOS (Apple Silicon). Execute terminal commands, modify files, build projects, and verify your work."
+                    AUTONOMOUS_DIRECTIVE = (
+                        "You are an autonomous AI software engineer and systems assistant on macOS (Apple Silicon).\n"
+                        "You have full authority and tools available (including `exec_command`) to run shell commands and modify files.\n"
+                        "CRITICAL OPERATIONAL RULES:\n"
+                        "1. When requested to build, design, create, write, edit, fix, or run anything, NEVER reply with conversational promises or explanations (such as 'I will create...', 'Let me design...', or plans).\n"
+                        "2. You MUST immediately execute the appropriate tools (such as `exec_command`) in your response to perform the action.\n"
+                        "3. Continue executing tools until the entire task is finished, verified, and complete."
+                    )
+                    sys_prompt = AUTONOMOUS_DIRECTIVE
+                    if client_sys.strip():
+                        sys_prompt += "\n\n" + client_sys.strip()
+
                     for item in reversed(data['input']):
                         if isinstance(item, dict) and item.get('role') == 'user':
                             c = item.get('content')
@@ -295,8 +332,14 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                     if rag_snippet:
                         sys_prompt += f"\n\n{rag_snippet}"
 
-                    lean_input = [{"role": "developer", "content": [{"type": "input_text", "text": sys_prompt}]}]
-                    recent = [i for i in data['input'] if isinstance(i, dict) and i.get('role') in ('user', 'assistant', 'tool')][-20:]
+                    # Keep user, assistant, tool, AND function_call, function_call_output!
+                    recent = [
+                        i for i in data['input']
+                        if isinstance(i, dict) and (
+                            i.get('role') in ('user', 'assistant', 'tool') or
+                            i.get('type') in ('function_call', 'function_call_output')
+                        )
+                    ][-25:]
                     
                     MAX_CHARS = 45000
                     current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
@@ -308,11 +351,14 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             break
                         kept_input.insert(0, i)
                         current_chars += len(c_str)
-                    if not any(i.get('role') == 'user' for i in kept_input):
-                        kept_input.append({"role": "user", "content": [{"type": "input_text", "text": user_text if user_text else "Hello"}]})
+
+                    if not any(i.get('role') == 'user' or i.get('type') == 'function_call_output' for i in kept_input):
+                        kept_input.append({"type": "message", "role": "user", "content": [{"type": "input_text", "text": user_text if user_text else "Hello"}]})
                     
+                    lean_input = [{"type": "message", "role": "developer", "content": [{"type": "input_text", "text": sys_prompt}]}]
                     lean_input.extend(kept_input)
                     data['input'] = normalize_conversation_tail(lean_input)
+                    data['instructions'] = sys_prompt
                     body = json.dumps(data).encode('utf-8')
 
                 elif 'messages' in data and isinstance(data['messages'], list):
@@ -339,17 +385,15 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                 c = m.get('content')
                                 if isinstance(c, str) and c not in sys_prompt:
                                     sys_prompt += f"\n\n{c}"
-                            elif m.get('role') in ('user', 'assistant', 'tool'):
+                            elif m.get('role') in ('user', 'assistant', 'tool') or 'tool_calls' in m or 'tool_call_id' in m:
                                 non_system_msgs.append(m)
 
                     lean_messages = [{"role": "system", "content": sys_prompt}]
-                    recent_msgs = non_system_msgs[-20:]
+                    recent_msgs = non_system_msgs[-25:]
                     
-                    # Truncate older messages if the total payload is too large for 8k context (~24k chars)
                     MAX_CHARS = 45000
                     current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
                     
-                    # Iterate backwards to keep the newest messages first
                     kept_msgs = []
                     for m in reversed(recent_msgs):
                         c = m.get('content', '')
@@ -359,7 +403,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         kept_msgs.insert(0, m)
                         current_chars += len(c_str)
 
-                    if not any(m.get('role') == 'user' for m in kept_msgs):
+                    if not any(m.get('role') == 'user' or 'tool_call_id' in m for m in kept_msgs):
                         kept_msgs.append({"role": "user", "content": user_text if user_text else "Hello"})
                     
                     lean_messages.extend(kept_msgs)
