@@ -26,51 +26,19 @@
   "promptQueueUseCount": 3,
   "providerProfiles": [
     {
+      "id": "provider_qwen3_5_9b_instruct",
+      "name": "Qwen 3.5 9B (MTP Speculative Turbo)",
+      "provider": "openai",
+      "baseUrl": "http://127.0.0.1:10101/v1",
+      "model": "qwen3.5-9b-instruct",
+      "apiKey": "local-gateway"
+    },
+    {
       "id": "provider_qwen3_8_27b_dflash",
       "name": "Qwen 3.8 27B (DFlash2 Turbo ~100 t/s)",
       "provider": "openai",
       "baseUrl": "http://127.0.0.1:10101/v1",
       "model": "qwen3.8-27b-dflash",
-      "apiKey": "local-gateway"
-    },
-    {
-      "id": "provider_deepseek_coder_v2_lite_instruct",
-      "name": "DeepSeek Coder V2 Lite (16B MoE - 2.4B Active)",
-      "provider": "openai",
-      "baseUrl": "http://127.0.0.1:10101/v1",
-      "model": "deepseek-coder-v2-lite-instruct",
-      "apiKey": "local-gateway"
-    },
-    {
-      "id": "provider_qwen3_coder_30b_a3b_instruct",
-      "name": "Qwen 3 Coder 30B (A3B MoE - 3B Active)",
-      "provider": "openai",
-      "baseUrl": "http://127.0.0.1:10101/v1",
-      "model": "qwen3-coder-30b-a3b-instruct",
-      "apiKey": "local-gateway"
-    },
-    {
-      "id": "provider_qwen2_5_coder_14b_instruct",
-      "name": "Qwen 2.5 Coder 14B (Smarter Agent)",
-      "provider": "openai",
-      "baseUrl": "http://127.0.0.1:10101/v1",
-      "model": "qwen2.5-coder-14b-instruct",
-      "apiKey": "local-gateway"
-    },
-    {
-      "id": "provider_qwen2_5_coder_7b_instruct",
-      "name": "Qwen 2.5 Coder 7B (Lightweight Turbo)",
-      "provider": "openai",
-      "baseUrl": "http://127.0.0.1:10101/v1",
-      "model": "qwen2.5-coder-7b-instruct",
-      "apiKey": "local-gateway"
-    },
-    {
-      "id": "provider_qwen2_5_coder_32b_uncensored",
-      "name": "Qwen 2.5 Coder 32B Uncensored",
-      "provider": "openai",
-      "baseUrl": "http://127.0.0.1:10101/v1",
-      "model": "qwen2.5-coder-32b-uncensored",
       "apiKey": "local-gateway"
     },
     {
