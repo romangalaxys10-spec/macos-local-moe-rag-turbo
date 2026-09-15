@@ -69,17 +69,17 @@ def flatten_tools(tools):
     if not isinstance(tools, list):
         return tools
     flat = []
-    EXCLUDE_NAMESPACES = {'mcp__codex_apps__binance', 'mcp__codex_apps__skyscanner', 'mcp__codex_apps__safety_settings'}
     for t in tools:
         if not isinstance(t, dict):
             continue
         ttype = t.get('type')
         tname = t.get('name', '')
+        # Drop bloated 3rd party plugin namespaces and heavy app GUI thread tools
+        if tname.startswith('mcp__codex_apps__') or tname == 'mcp__codex_app':
+            continue
         if ttype == 'function':
             flat.append(t)
         elif ttype == 'namespace' and 'tools' in t and isinstance(t['tools'], list):
-            if tname in EXCLUDE_NAMESPACES:
-                continue
             for sub_t in t['tools']:
                 if isinstance(sub_t, dict) and sub_t.get('type') == 'function':
                     flat.append(sub_t)
@@ -146,7 +146,7 @@ def normalize_conversation_tail(msgs):
         last = out[-1]
         last_role = last.get('role')
         last_type = last.get('type')
-        if last_role not in ('user', 'tool') and last_type not in ('function_call_output',):
+        if last_role not in ('user', 'tool') and last_type not in ('function_call', 'function_call_output'):
             out.append({"type": "message", "role": "user", "content": [{"type": "input_text", "text": "(continue)"}]})
     return out
 
@@ -181,22 +181,23 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path in ('/', ''):
+            out = b"Ollama is running"
             self.send_response(200)
             self.send_header('Content-Type', 'text/plain; charset=utf-8')
+            self.send_header('Content-Length', str(len(out)))
             self.end_headers()
-            self.wfile.write(b"Ollama is running")
+            self.wfile.write(out)
             return
         if self.path == '/api/version':
+            out = b'{"version":"0.5.12"}'
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(out)))
             self.end_headers()
-            self.wfile.write(b'{"version":"0.5.12"}')
+            self.wfile.write(out)
             return
         if self.path == '/api/tags':
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({
+            out = json.dumps({
                 "models": [{
                     "name": "ornith-1.5-35b-uncensored:latest",
                     "model": "ornith-1.5-35b-uncensored:latest",
@@ -212,7 +213,12 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         "quantization_level": "Q2_K"
                     }
                 }]
-            }).encode('utf-8'))
+            }).encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(out)))
+            self.end_headers()
+            self.wfile.write(out)
             return
 
         if self.path == '/v1/models':
@@ -312,19 +318,19 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                         client_sys += "\n\n" + b.get('text', '')
 
                     AUTONOMOUS_DIRECTIVE = (
-                        "You are an autonomous AI software engineer and systems assistant on macOS (Apple Silicon).\n"
-                        "You have full authority and tools available (including `exec_command`) to run shell commands and modify files.\n"
-                        "CRITICAL OPERATIONAL RULES:\n"
-                        "1. When requested to build, design, create, write, edit, fix, or run anything, NEVER reply with conversational promises or explanations (such as 'I will create...', 'Let me design...', or plans).\n"
-                        "2. You MUST immediately execute the appropriate tools (such as `exec_command`) in your response to perform the action.\n"
-                        "3. Continue executing tools until the entire task is finished, verified, and complete.\n"
-                        "4. TOOL ARGUMENT SIZE LIMIT: Each command argument in `exec_command` MUST NOT exceed 2500 characters. "
-                        "NEVER paste a large multi-kilobyte file directly inside a single `cat << 'EOF'` bash command argument (this triggers an internal 4000-character buffer limit and crashes the server). "
-                        "To write files larger than 2KB, write a clean Python script (`python3 -c \"...\"`) or write in modular chunks (`cat << 'EOF' >> filename`)."
+                        "### CRITICAL OPERATIONAL RULES (MANDATORY ENFORCEMENT) ###\n"
+                        "1. NO CONVERSATIONAL PROMISES: Never reply with conversational promises, filler, or plans (such as 'I will create...', 'Let me design...', or 'I am going to...').\n"
+                        "2. IMMEDIATE TOOL EXECUTION: Immediately execute tools (such as `exec_command`) in your very first response to carry out the requested actions.\n"
+                        "3. COMMAND BUFFER LIMIT (< 2,000 CHARACTERS):\n"
+                        "   Each command argument in `exec_command` MUST NOT exceed 2,000 characters.\n"
+                        "   NEVER paste a large file directly inside a single `cat << 'EOF'` bash command argument.\n"
+                        "   To write files larger than 1.5KB, write a clean Python script (`python3 -c \"...\"`) or write in small modular chunks (< 1,500 characters each).\n"
+                        "4. CONTINUE UNTIL VERIFIED: Continue executing tools until the entire task is finished, verified, and complete."
                     )
-                    sys_prompt = AUTONOMOUS_DIRECTIVE
+                    sys_prompt = ""
                     if client_sys.strip():
-                        sys_prompt += "\n\n" + client_sys.strip()
+                        sys_prompt += client_sys.strip() + "\n\n"
+                    sys_prompt += AUTONOMOUS_DIRECTIVE
 
                     for item in reversed(data['input']):
                         if isinstance(item, dict) and item.get('role') == 'user':
@@ -346,18 +352,17 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             i.get('role') in ('user', 'assistant', 'tool') or
                             i.get('type') in ('function_call', 'function_call_output')
                         )
-                    ][-25:]
+                    ][-30:]
                     
-                    MAX_CHARS = 45000
+                    MAX_CHARS = 55000
                     current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
                     kept_input = []
                     for i in reversed(recent):
-                        c = i.get('content', '')
-                        c_str = json.dumps(c) if isinstance(c, list) else str(c)
-                        if current_chars + len(c_str) > MAX_CHARS:
+                        i_str = json.dumps(i)
+                        if current_chars + len(i_str) > MAX_CHARS and len(kept_input) >= 6:
                             break
                         kept_input.insert(0, i)
-                        current_chars += len(c_str)
+                        current_chars += len(i_str)
 
                     if not any(i.get('role') == 'user' or i.get('type') == 'function_call_output' for i in kept_input):
                         kept_input.append({"type": "message", "role": "user", "content": [{"type": "input_text", "text": user_text if user_text else "Hello"}]})
@@ -380,7 +385,16 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             break
 
                     rag_snippet = get_rag_context(user_text) if user_text else ""
-                    sys_prompt = "You are a helpful coding assistant. Answer concisely and accurately."
+                    AUTONOMOUS_DIRECTIVE = (
+                        "### CRITICAL OPERATIONAL RULES (MANDATORY ENFORCEMENT) ###\n"
+                        "1. NO CONVERSATIONAL PROMISES: Never reply with conversational promises or explanations (such as 'I will create...', 'Let me design...').\n"
+                        "2. IMMEDIATE TOOL EXECUTION: Immediately execute tools (such as `exec_command`) in your response.\n"
+                        "3. COMMAND BUFFER LIMIT (< 2,000 CHARACTERS):\n"
+                        "   Each command argument in `exec_command` MUST NOT exceed 2,000 characters.\n"
+                        "   To write files larger than 1.5KB, use a clean Python script (`python3 -c \"...\"`) or write in small modular chunks.\n"
+                        "4. CONTINUE UNTIL VERIFIED: Continue executing tools until the entire task is finished, verified, and complete."
+                    )
+                    sys_prompt = "You are a helpful coding assistant. Answer concisely and accurately.\n\n" + AUTONOMOUS_DIRECTIVE
                     if rag_snippet:
                         sys_prompt += f"\n\n{rag_snippet}"
 
@@ -396,19 +410,18 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                 non_system_msgs.append(m)
 
                     lean_messages = [{"role": "system", "content": sys_prompt}]
-                    recent_msgs = non_system_msgs[-25:]
+                    recent_msgs = non_system_msgs[-30:]
                     
-                    MAX_CHARS = 45000
+                    MAX_CHARS = 55000
                     current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
                     
                     kept_msgs = []
                     for m in reversed(recent_msgs):
-                        c = m.get('content', '')
-                        c_str = c if isinstance(c, str) else json.dumps(c)
-                        if current_chars + len(c_str) > MAX_CHARS:
+                        m_str = json.dumps(m)
+                        if current_chars + len(m_str) > MAX_CHARS and len(kept_msgs) >= 6:
                             break
                         kept_msgs.insert(0, m)
-                        current_chars += len(c_str)
+                        current_chars += len(m_str)
 
                     if not any(m.get('role') == 'user' or 'tool_call_id' in m for m in kept_msgs):
                         kept_msgs.append({"role": "user", "content": user_text if user_text else "Hello"})
@@ -426,6 +439,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
             data=body,
             headers={"Content-Type": "application/json"}
         )
+        headers_sent = False
         try:
             if 'user_text' in locals() and user_text:
                 try:
@@ -442,6 +456,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         if k.lower() not in ('content-length', 'transfer-encoding'):
                             self.send_header(k, v)
                     self.end_headers()
+                    headers_sent = True
                     assistant_text = ""
                     while True:
                         line = resp.readline()
@@ -472,8 +487,6 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             pass
                 else:
                     content = resp.read()
-                    # Leave reasoning_content intact
-                    
                     try:
                         resp_data = json.loads(content)
                         resp_data = sanitize_tool_calls(resp_data)
@@ -485,7 +498,6 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                                 msg['content'] = re.sub(r'<think>.*?</think>', '', assistant_text, flags=re.DOTALL)
                         elif 'output' in resp_data:
                             with open('/tmp/proxy-response.log', 'w') as log_f:
-                                import json
                                 log_f.write(json.dumps(resp_data['output'], indent=2))
                             # Strip the custom llama-server reasoning block completely
                             resp_data['output'] = [o for o in resp_data['output'] if o.get('type') != 'reasoning']
@@ -507,6 +519,7 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                             self.send_header(k, v)
                     self.send_header('Content-Length', str(len(content)))
                     self.end_headers()
+                    headers_sent = True
                     self.wfile.write(content)
                     self.wfile.flush()
         except Exception as e:
@@ -518,20 +531,23 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                 
                 is_responses_stream = ('/v1/responses' in self.path) and isinstance(data, dict) and data.get('stream', False)
                 if is_responses_stream:
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'text/event-stream; charset=utf-8')
-                    self.send_header('Cache-Control', 'no-cache')
-                    self.send_header('Connection', 'keep-alive')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.end_headers()
-                    
                     msg_id = f"msg_err_{int(time.time())}"
                     resp_id = f"resp_err_{int(time.time())}"
-                    clean_msg = "Command buffer limit reached (file write exceeded 4,000 character limit). Please write the file using Python (`python3 -c '...'`) or in smaller chunks."
+                    clean_msg = "Task executing. Command buffer limit reached (file write exceeded 2,000 char buffer limit). Continuing with modular chunks..."
+
+                    if not headers_sent:
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'text/event-stream; charset=utf-8')
+                        self.send_header('Cache-Control', 'no-cache')
+                        self.send_header('Connection', 'keep-alive')
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
                     
                     events = [
                         {"type": "response.created", "response": {"id": resp_id, "model": model_name or "local", "status": "in_progress"}},
+                        {"type": "response.in_progress", "response": {"id": resp_id, "model": model_name or "local", "status": "in_progress"}},
                         {"type": "response.output_item.added", "item": {"id": msg_id, "type": "message", "role": "assistant", "status": "in_progress", "content": []}},
+                        {"type": "response.content_part.added", "item_id": msg_id, "part": {"type": "output_text", "text": ""}},
                         {"type": "response.output_text.delta", "item_id": msg_id, "delta": clean_msg},
                         {"type": "response.output_text.done", "item_id": msg_id, "text": clean_msg},
                         {"type": "response.output_item.done", "item": {"id": msg_id, "type": "message", "role": "assistant", "status": "completed", "content": [{"type": "output_text", "text": clean_msg}]}},
@@ -542,7 +558,8 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         self.wfile.flush()
                     return
                 else:
-                    self.send_error(502, f"Proxy error: {str(e)}\n{tb}")
+                    if not headers_sent:
+                        self.send_error(502, f"Proxy error: {str(e)}\n{tb}")
             except Exception:
                 pass
 
