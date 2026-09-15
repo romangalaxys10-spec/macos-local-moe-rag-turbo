@@ -346,13 +346,27 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         sys_prompt += f"\n\n{rag_snippet}"
 
                     # Keep user, assistant, tool, AND function_call, function_call_output!
-                    recent = [
-                        i for i in data['input']
-                        if isinstance(i, dict) and (
-                            i.get('role') in ('user', 'assistant', 'tool') or
-                            i.get('type') in ('function_call', 'function_call_output')
-                        )
-                    ][-30:]
+                    recent = []
+                    for i in data['input']:
+                        if not isinstance(i, dict):
+                            continue
+                        if i.get('role') in ('user', 'assistant', 'tool') or i.get('type') in ('function_call', 'function_call_output'):
+                            # Truncate oversized historical command arguments to prevent poisoning the context window
+                            if i.get('type') == 'function_call' and isinstance(i.get('arguments'), str) and len(i['arguments']) > 2500:
+                                try:
+                                    arg_obj = json.loads(i['arguments'])
+                                    if 'cmd' in arg_obj and isinstance(arg_obj['cmd'], str):
+                                        arg_obj['cmd'] = arg_obj['cmd'][:1500] + "\n... [truncated large command history]"
+                                        i['arguments'] = json.dumps(arg_obj)
+                                    elif 'command' in arg_obj and isinstance(arg_obj['command'], str):
+                                        arg_obj['command'] = arg_obj['command'][:1500] + "\n... [truncated large command history]"
+                                        i['arguments'] = json.dumps(arg_obj)
+                                    else:
+                                        i['arguments'] = i['arguments'][:1500] + '... [truncated large command history]"}'
+                                except Exception:
+                                    i['arguments'] = '{"command":"[truncated large command history]"}'
+                            recent.append(i)
+                    recent = recent[-30:]
                     
                     MAX_CHARS = 55000
                     current_chars = len(sys_prompt) + len(json.dumps(data.get('tools', [])))
@@ -364,12 +378,15 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         kept_input.insert(0, i)
                         current_chars += len(i_str)
 
+                    # Ensure conversation does not start with an orphaned function_call_output
+                    while kept_input and kept_input[0].get('type') == 'function_call_output':
+                        kept_input.pop(0)
+
                     if not any(i.get('role') == 'user' or i.get('type') == 'function_call_output' for i in kept_input):
                         kept_input.append({"type": "message", "role": "user", "content": [{"type": "input_text", "text": user_text if user_text else "Hello"}]})
                     
-                    lean_input = [{"type": "message", "role": "developer", "content": [{"type": "input_text", "text": sys_prompt}]}]
-                    lean_input.extend(kept_input)
-                    data['input'] = normalize_conversation_tail(lean_input)
+                    # Do NOT duplicate sys_prompt into input[0] because instructions already contains it!
+                    data['input'] = normalize_conversation_tail(kept_input)
                     data['instructions'] = sys_prompt
                     body = json.dumps(data).encode('utf-8')
 
@@ -533,7 +550,19 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                 if is_responses_stream:
                     msg_id = f"msg_err_{int(time.time())}"
                     resp_id = f"resp_err_{int(time.time())}"
-                    clean_msg = "Task executing. Command buffer limit reached (file write exceeded 2,000 char buffer limit). Continuing with modular chunks..."
+                    
+                    err_detail = ""
+                    if isinstance(e, urllib.error.HTTPError):
+                        try:
+                            err_raw = e.read().decode('utf-8', errors='ignore')
+                            err_json = json.loads(err_raw)
+                            err_detail = err_json.get('error', {}).get('message', '') or err_raw
+                        except Exception:
+                            err_detail = str(e)
+                    else:
+                        err_detail = str(e)
+
+                    clean_msg = f"Task in progress. (Server: {err_detail[:120] if err_detail else 'recovering stream'}). Continuing..."
 
                     if not headers_sent:
                         self.send_response(200)
