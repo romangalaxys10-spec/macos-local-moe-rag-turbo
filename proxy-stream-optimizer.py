@@ -69,13 +69,17 @@ def flatten_tools(tools):
     if not isinstance(tools, list):
         return tools
     flat = []
+    EXCLUDE_NAMESPACES = {'mcp__codex_apps__binance', 'mcp__codex_apps__skyscanner', 'mcp__codex_apps__safety_settings'}
     for t in tools:
         if not isinstance(t, dict):
             continue
         ttype = t.get('type')
+        tname = t.get('name', '')
         if ttype == 'function':
             flat.append(t)
         elif ttype == 'namespace' and 'tools' in t and isinstance(t['tools'], list):
+            if tname in EXCLUDE_NAMESPACES:
+                continue
             for sub_t in t['tools']:
                 if isinstance(sub_t, dict) and sub_t.get('type') == 'function':
                     flat.append(sub_t)
@@ -313,7 +317,10 @@ class ProxyHandler(http.server.BaseHTTPRequestHandler):
                         "CRITICAL OPERATIONAL RULES:\n"
                         "1. When requested to build, design, create, write, edit, fix, or run anything, NEVER reply with conversational promises or explanations (such as 'I will create...', 'Let me design...', or plans).\n"
                         "2. You MUST immediately execute the appropriate tools (such as `exec_command`) in your response to perform the action.\n"
-                        "3. Continue executing tools until the entire task is finished, verified, and complete."
+                        "3. Continue executing tools until the entire task is finished, verified, and complete.\n"
+                        "4. TOOL ARGUMENT SIZE LIMIT: Each command argument in `exec_command` MUST NOT exceed 2500 characters. "
+                        "NEVER paste a large multi-kilobyte file directly inside a single `cat << 'EOF'` bash command argument (this triggers an internal 4000-character buffer limit and crashes the server). "
+                        "To write files larger than 2KB, write a clean Python script (`python3 -c \"...\"`) or write in modular chunks (`cat << 'EOF' >> filename`)."
                     )
                     sys_prompt = AUTONOMOUS_DIRECTIVE
                     if client_sys.strip():
